@@ -15,6 +15,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/fade_scroll.dart';
 import '../../../shared/widgets/jalali_date_picker.dart';
 import '../../../shared/widgets/money_text.dart';
+import '../../../shared/widgets/nav_aware_fab.dart';
 import '../../../shared/widgets/settings_button.dart';
 import '../../app_update/presentation/widgets/update_header_button.dart';
 import '../../employers/state/employer_providers.dart';
@@ -151,11 +152,13 @@ class PaymentsPage extends ConsumerWidget {
           SettingsButton(),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: null,
-        onPressed: () => showPaymentFormSheet(context),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('پرداخت'),
+      floatingActionButton: NavAwareFab(
+        child: FloatingActionButton.extended(
+          heroTag: null,
+          onPressed: () => showPaymentFormSheet(context),
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('پرداخت'),
+        ),
       ),
       body: body,
     );

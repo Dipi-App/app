@@ -12,6 +12,7 @@ import '../../../data/db/app_database.dart';
 import '../../../domain/enums.dart';
 import '../../../shared/utils/motion.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/nav_aware_fab.dart';
 import '../../../shared/widgets/settings_button.dart';
 import '../../app_update/presentation/widgets/update_header_button.dart';
 import '../../settings/state/settings_providers.dart';
@@ -115,13 +116,15 @@ class _EmployersPageState extends ConsumerState<EmployersPage> {
           const SettingsButton(),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        // The tabs live together in an IndexedStack; a default hero tag would
-        // clash with the payments FAB during route transitions.
-        heroTag: null,
-        onPressed: () => showEmployerFormSheet(context),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('کارفرما'),
+      floatingActionButton: NavAwareFab(
+        child: FloatingActionButton.extended(
+          // The tabs live together in an IndexedStack; a default hero tag would
+          // clash with the payments FAB during route transitions.
+          heroTag: null,
+          onPressed: () => showEmployerFormSheet(context),
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('کارفرما'),
+        ),
       ),
       body: body,
     );

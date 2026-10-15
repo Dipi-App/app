@@ -131,26 +131,29 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           final calendarHeight = (constraints.maxHeight * 0.5)
               .clamp(280.0, 460.0)
               .toDouble();
-          return Padding(
+          return SingleChildScrollView(
             padding: EdgeInsets.only(bottom: AppTokens.navClearance(context)),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: calendarHeight,
-                  child: _CalendarCard(
-                    key: _calendarKey,
-                    controller: _controller,
-                    baseMonth: _baseMonth,
-                    selected: _selected,
-                    month: month,
-                    onDayTap: _openDay,
-                    onMonthChanged: (page) => ref
-                        .read(visibleMonthProvider.notifier)
-                        .goTo(_monthForPage(page)),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight,
+              ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: calendarHeight,
+                    child: _CalendarCard(
+                      key: _calendarKey,
+                      controller: _controller,
+                      baseMonth: _baseMonth,
+                      selected: _selected,
+                      month: month,
+                      onDayTap: _openDay,
+                      onMonthChanged: (page) => ref
+                          .read(visibleMonthProvider.notifier)
+                          .goTo(_monthForPage(page)),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: AnimatedSwitcher(
+                  AnimatedSwitcher(
                     duration: reduced
                         ? Duration.zero
                         : const Duration(milliseconds: 280),
@@ -170,8 +173,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                       day: _selected,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -531,7 +534,7 @@ class _SelectedDayCard extends ConsumerWidget {
 
     return Card(
       margin: const EdgeInsets.fromLTRB(12, 6, 12, 0),
-      child: SingleChildScrollView(
+      child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
