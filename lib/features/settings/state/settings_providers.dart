@@ -77,6 +77,19 @@ class SettingsController extends AsyncNotifier<AppSettings> {
 
   Future<void> setBiometricEnabled(bool enabled) =>
       _persist(_current.copyWith(biometricEnabled: enabled));
+
+  Future<void> setOnboardingSeen(bool seen) =>
+      _persist(_current.copyWith(onboardingSeen: seen));
+
+  Future<void> setVoiceHintsEnabled(bool enabled) =>
+      _persist(_current.copyWith(voiceHintsEnabled: enabled));
+
+  Future<void> markCoachMarkSeen(String id) {
+    if (_current.coachMarksSeen.contains(id)) return Future.value();
+    return _persist(
+      _current.copyWith(coachMarksSeen: {..._current.coachMarksSeen, id}),
+    );
+  }
 }
 
 final settingsControllerProvider =

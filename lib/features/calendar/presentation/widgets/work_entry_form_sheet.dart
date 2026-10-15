@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' show Value;
 
+import '../../../../core/help/coach_mark.dart';
+import '../../../../core/help/help_content.dart';
+import '../../../../core/help/help_page.dart';
+import '../../../../core/help/voice_hints.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/utils/jalali_utils.dart';
 import '../../../../core/utils/time_utils.dart';
@@ -64,6 +68,7 @@ class _WorkEntryFormSheetState extends ConsumerState<WorkEntryFormSheet> {
   bool _saving = false;
 
   bool get _isEditing => widget.entry != null;
+  final _employerKey = GlobalKey();
 
   @override
   void initState() {
@@ -82,6 +87,24 @@ class _WorkEntryFormSheetState extends ConsumerState<WorkEntryFormSheet> {
         ? entry.outOfPocketAmount
         : null;
     _wageTouched = entry != null;
+    if (!_isEditing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        showCoachMarks(
+          context,
+          ref,
+          id: 'workday',
+          steps: [
+            CoachMarkStep(
+              targetKey: _employerKey,
+              title: 'برای کی کار کردی؟',
+              message: 'کارفرما را از اینجا انتخاب کن. مبلغ دستمزد خودش پر '
+                  'می‌شود.',
+            ),
+          ],
+        );
+      });
+    }
   }
 
   @override
@@ -221,6 +244,16 @@ class _WorkEntryFormSheetState extends ConsumerState<WorkEntryFormSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Row(
+            children: [
+              const Spacer(),
+              VoiceHintButton(
+                text: HelpContent.addWorkday.speechText,
+                compact: true,
+              ),
+              const ContextHelpButton(topicId: 'add-workday'),
+            ],
+          ),
           if (options.isEmpty)
             _NoEmployersHint(
               onCreate: () async {
@@ -230,6 +263,7 @@ class _WorkEntryFormSheetState extends ConsumerState<WorkEntryFormSheet> {
             )
           else
             DropdownButtonFormField<int>(
+              key: _employerKey,
               initialValue: _employerId,
               isExpanded: true,
               decoration: InputDecoration(

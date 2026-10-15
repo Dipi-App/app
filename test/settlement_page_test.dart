@@ -87,7 +87,7 @@ void main() {
     await _pump(tester, database, employerId);
 
     // 5,000,000 + 500,000 − 2,000,000 = 3,500,000 Rial = 350,000 Toman.
-    expect(find.text('طلبکار'), findsWidgets);
+    expect(find.text('طلب شما'), findsWidgets);
     expect(find.textContaining('۳۵۰٬۰۰۰'), findsWidgets);
     expect(find.textContaining('۵۰۰٬۰۰۰'), findsWidgets);
 
@@ -120,7 +120,7 @@ void main() {
 
     await _pump(tester, database, employerId);
 
-    expect(find.text('بدهکار'), findsWidgets);
+    expect(find.text('بدهی شما'), findsWidgets);
     // 1,000,000 − 3,000,000 = −2,000,000 Rial = 200,000 Toman owed.
     expect(find.textContaining('۲۰۰٬۰۰۰'), findsWidgets);
 

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/help/help_page.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_tokens.dart';
 import '../../../core/utils/jalali_utils.dart';
 import '../../../core/utils/persian_digits.dart';
 import '../../../core/utils/time_utils.dart';
 import '../../../data/db/app_database.dart';
+import '../../../domain/enums.dart';
 import '../../../domain/settlement.dart';
 import '../../../domain/stats.dart';
 import '../../../shared/utils/motion.dart';
@@ -16,6 +19,7 @@ import '../../../shared/widgets/jalali_date_picker.dart';
 import '../../../shared/widgets/money_text.dart';
 import '../../../shared/widgets/monthly_chart.dart';
 import '../../../shared/widgets/section_card.dart';
+import '../../../shared/widgets/settings_button.dart';
 import '../../employers/presentation/widgets/employer_avatar.dart';
 import '../../employers/state/employer_providers.dart';
 import '../../payments/presentation/settlement_page.dart';
@@ -46,12 +50,19 @@ class StatsPage extends ConsumerWidget {
             icon: const Icon(Icons.date_range_outlined),
             tooltip: 'بازه دلخواه',
           ),
+          const ContextHelpButton(topicId: 'see-balance'),
+          const SettingsButton(),
         ],
       ),
       body: !entriesReady
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                8,
+                16,
+                AppTokens.navClearance(context),
+              ),
               children: [
                 _FilterChips(
                   filter: filter,
@@ -217,7 +228,7 @@ class _TotalsCard extends StatelessWidget {
         label: 'دستمزد',
         amountRial: totals.wageRial,
         icon: Icons.payments_outlined,
-        color: const Color(AppColors.creditor),
+        color: AppColors.settlementColor(context, SettlementState.creditor),
         reduced: reduced,
       ),
       _StatTile(

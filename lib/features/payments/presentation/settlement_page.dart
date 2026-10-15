@@ -31,7 +31,7 @@ class SettlementPage extends ConsumerWidget {
 
     final summary = ref.watch(employerSettlementProvider(employerId));
     final theme = Theme.of(context);
-    final color = AppColors.forState(summary.state);
+    final color = AppColors.settlementColor(context, summary.state);
 
     return Scaffold(
       appBar: AppBar(title: const Text('تسویه حساب')),

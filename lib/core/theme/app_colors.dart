@@ -57,14 +57,39 @@ class AppColors {
   /// Brand accent: `gold700`.
   static const int accent = 0xFFD9962A;
 
-  static const int creditor = 0xFF2E7D6F;
-  static const int debtor = 0xFFC0392B;
-  static const int settled = 0xFF7A7A7A;
-  static const int pending = 0xFFB8860B;
+  // Light-mode settlement colors, tuned for >= 4.5:1 on a light surface.
+  static const int creditor = 0xFF1F6B5C;
+  static const int debtor = 0xFFB3261E;
+  static const int settled = 0xFF5F6368;
+  static const int pending = 0xFF8A6A00;
 
+  // Dark-mode variants, tuned for >= 4.5:1 on a dark surface.
+  static const int creditorDark = 0xFF7FD9C4;
+  static const int debtorDark = 0xFFFFB4AB;
+  static const int settledDark = 0xFFB9C6C4;
+  static const int pendingDark = 0xFFF5C453;
+
+  /// Brightness-agnostic settlement color. Kept for code that already knows
+  /// the mode; prefer [settlementColor] in widgets so dark mode stays readable.
   static Color forState(SettlementState state) => switch (state) {
     SettlementState.creditor => const Color(creditor),
     SettlementState.debtor => const Color(debtor),
     SettlementState.settled => const Color(settled),
   };
+
+  /// Settlement color that adapts to the current theme brightness.
+  static Color settlementColor(BuildContext context, SettlementState state) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return switch (state) {
+      SettlementState.creditor => Color(dark ? creditorDark : creditor),
+      SettlementState.debtor => Color(dark ? debtorDark : debtor),
+      SettlementState.settled => Color(dark ? settledDark : settled),
+    };
+  }
+
+  /// Pending/"in wait" color that adapts to the current theme brightness.
+  static Color pendingColor(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Color(dark ? pendingDark : pending);
+  }
 }

@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/jalali_utils.dart';
 import '../../core/utils/money.dart';
 import '../../core/utils/persian_digits.dart';
+import '../../domain/enums.dart';
 import '../../domain/stats.dart';
 import '../../features/settings/state/settings_providers.dart';
 import '../utils/motion.dart';
@@ -35,7 +36,10 @@ class MonthlyChart extends ConsumerWidget {
     final maxY = _niceCeil(maxValue.toDouble());
     final interval = maxY / 3;
 
-    final earnedColor = const Color(AppColors.creditor);
+    final earnedColor = AppColors.settlementColor(
+      context,
+      SettlementState.creditor,
+    );
     final paidColor = theme.colorScheme.error;
 
     return Column(

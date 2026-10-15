@@ -1,4 +1,5 @@
 import 'package:dipi/app.dart';
+import 'package:dipi/core/help/coach_mark.dart';
 import 'package:dipi/core/providers/database_providers.dart';
 import 'package:dipi/core/utils/jalali_utils.dart';
 import 'package:dipi/data/db/app_database.dart';
@@ -25,13 +26,22 @@ Future<void> _pumpApp(WidgetTester tester, AppDatabase database) async {
 
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [databaseProvider.overrideWithValue(database)],
+      overrides: [
+        databaseProvider.overrideWithValue(database),
+        coachMarksEnabledProvider.overrideWithValue(false),
+      ],
       child: const DipiApp(),
     ),
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 1400));
   await tester.pump(const Duration(milliseconds: 700));
+  // First run shows the onboarding slides; skip them to reach the shell.
+  if (find.text('رد کردن').evaluate().isNotEmpty) {
+    await tester.tap(find.text('رد کردن'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+  }
 }
 
 Future<void> _settle(WidgetTester tester, [int ms = 500]) async {

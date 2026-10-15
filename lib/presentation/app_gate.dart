@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/backup/state/backup_providers.dart';
 import '../features/lock/presentation/lock_screen.dart';
 import '../features/lock/state/lock_providers.dart';
+import '../features/onboarding/presentation/onboarding_page.dart';
 import '../features/settings/state/settings_providers.dart';
 import '../features/splash/presentation/splash_page.dart';
 import '../shared/utils/motion.dart';
@@ -102,6 +103,8 @@ class _AppGateState extends ConsumerState<AppGate>
       );
     } else if (ready && locked) {
       child = const LockScreen(key: ValueKey('lock'));
+    } else if (ready && !settings.requireValue.onboardingSeen) {
+      child = const OnboardingPage(key: ValueKey('onboarding'));
     } else if (ready) {
       child = const HomeShell(key: ValueKey('home'));
     } else {

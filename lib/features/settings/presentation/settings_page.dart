@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_info.dart';
+import '../../../core/help/help_page.dart';
+import '../../../core/providers/app_info_providers.dart';
 import '../../../core/utils/jalali_utils.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/persian_digits.dart';
@@ -14,6 +16,7 @@ import '../../backup/presentation/backup_page.dart';
 import '../../export/presentation/export_page.dart';
 import '../../lock/presentation/pin_dialogs.dart';
 import '../../lock/state/lock_providers.dart';
+import '../../onboarding/presentation/onboarding_page.dart';
 import '../domain/app_settings.dart';
 import '../state/settings_providers.dart';
 
@@ -135,6 +138,47 @@ class SettingsPage extends ConsumerWidget {
           _SecurityCard(settings: settings),
           const SizedBox(height: 12),
           SectionCard(
+            title: 'آموزش و راهنما',
+            child: Column(
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.school_outlined),
+                  title: const Text('آموزش اولیه'),
+                  subtitle: const Text('دوباره این چند اسلاید ساده را ببین'),
+                  trailing: const Icon(Icons.chevron_left_rounded),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const OnboardingPage(),
+                    ),
+                  ),
+                ),
+                const Divider(),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.menu_book_outlined),
+                  title: const Text('راهنمای کار با دیپی'),
+                  subtitle: const Text('ثبت روزکار، پرداخت، حساب، پشتیبان و خروجی'),
+                  trailing: const Icon(Icons.chevron_left_rounded),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const HelpPage()),
+                  ),
+                ),
+                const Divider(),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: settings.voiceHintsEnabled,
+                  onChanged: controller.setVoiceHintsEnabled,
+                  title: const Text('خواندن راهنما با صدا'),
+                  subtitle: const Text(
+                    'در صفحه‌های مهم، دکمه بلندگو متن راهنما را می‌خواند.',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SectionCard(
             title: 'درباره دیپی',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -167,7 +211,11 @@ class SettingsPage extends ConsumerWidget {
                   children: [
                     const Text('نسخه'),
                     const Spacer(),
-                    Text(toPersianDigits(AppInfo.version)),
+                    Text(
+                      toPersianDigits(
+                        ref.watch(appVersionProvider).value ?? AppInfo.version,
+                      ),
+                    ),
                   ],
                 ),
               ],

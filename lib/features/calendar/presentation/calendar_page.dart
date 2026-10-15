@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/help/coach_mark.dart';
+import '../../../core/help/help_page.dart';
+import '../../../core/theme/app_tokens.dart';
 import '../../../core/utils/jalali_utils.dart';
 import '../../../core/utils/time_utils.dart';
 import '../../../shared/utils/motion.dart';
 import '../../../shared/widgets/count_up_text.dart';
 import '../../../shared/widgets/money_text.dart';
+import '../../../shared/widgets/settings_button.dart';
 import '../state/calendar_providers.dart';
 import 'widgets/day_cell.dart';
 import 'widgets/day_sheet.dart';
@@ -23,6 +27,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   late final DateTime _baseMonth;
   late final PageController _controller;
   late DateTime _selected;
+  final _summaryKey = GlobalKey();
 
   @override
   void initState() {
@@ -30,6 +35,22 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     _baseMonth = ref.read(visibleMonthProvider);
     _selected = dateOnly(DateTime.now());
     _controller = PageController(initialPage: _basePage);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showCoachMarks(
+        context,
+        ref,
+        id: 'calendar',
+        steps: [
+          CoachMarkStep(
+            targetKey: _summaryKey,
+            title: 'جمع ماه',
+            message: 'اینجا می‌بینی در این ماه چند روز کار کرده‌ای و چقدر '
+                'دستمزد گرفته‌ای.',
+          ),
+        ],
+      );
+    });
   }
 
   @override
@@ -87,25 +108,31 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             icon: const Icon(Icons.today_rounded),
             tooltip: 'امروز',
           ),
+          const ContextHelpButton(topicId: 'calendar-overview'),
+          const SettingsButton(),
         ],
       ),
-      body: Column(
-        children: [
-          const _WeekdayHeader(),
-          Expanded(
-            child: PageView.builder(
-              controller: _controller,
-              onPageChanged: (page) =>
-                  ref.read(visibleMonthProvider.notifier).goTo(_monthForPage(page)),
-              itemBuilder: (context, page) => _MonthGrid(
-                month: _monthForPage(page),
-                selected: _selected,
-                onDayTap: _openDay,
+      body: Padding(
+        padding: EdgeInsets.only(bottom: AppTokens.navClearance(context)),
+        child: Column(
+          children: [
+            const _WeekdayHeader(),
+            Expanded(
+              child: PageView.builder(
+                controller: _controller,
+                onPageChanged: (page) => ref
+                    .read(visibleMonthProvider.notifier)
+                    .goTo(_monthForPage(page)),
+                itemBuilder: (context, page) => _MonthGrid(
+                  month: _monthForPage(page),
+                  selected: _selected,
+                  onDayTap: _openDay,
+                ),
               ),
             ),
-          ),
-          const _MonthSummary(),
-        ],
+            _MonthSummary(key: _summaryKey),
+          ],
+        ),
       ),
     );
   }
@@ -202,7 +229,7 @@ class _MonthGrid extends ConsumerWidget {
 }
 
 class _MonthSummary extends ConsumerWidget {
-  const _MonthSummary();
+  const _MonthSummary({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

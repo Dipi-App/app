@@ -97,7 +97,7 @@ void main() {
     expect(find.byType(BarChart), findsOneWidget);
 
     // 5,000,000 − 2,000,000 = 3,000,000 Rial = 300,000 Toman outstanding.
-    expect(find.text('طلبکار'), findsWidgets);
+    expect(find.text('طلب شما'), findsWidgets);
     expect(find.textContaining('۳۰۰٬۰۰۰'), findsWidgets);
     expect(find.textContaining('۵۰۰٬۰۰۰'), findsWidgets);
     expect(find.textContaining('۲۰۰٬۰۰۰'), findsWidgets);

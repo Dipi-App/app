@@ -333,7 +333,7 @@ class _BalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = AppColors.forState(summary.state);
+    final color = AppColors.settlementColor(context, summary.state);
 
     return Card(
       color: color.withValues(alpha: 0.10),

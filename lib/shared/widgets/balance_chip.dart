@@ -5,6 +5,12 @@ import '../../domain/enums.dart';
 import '../../domain/settlement.dart';
 import 'money_text.dart';
 
+IconData _stateIcon(SettlementState state) => switch (state) {
+  SettlementState.creditor => Icons.trending_up_rounded,
+  SettlementState.debtor => Icons.trending_down_rounded,
+  SettlementState.settled => Icons.check_circle_outline_rounded,
+};
+
 class BalanceChip extends StatelessWidget {
   const BalanceChip({
     super.key,
@@ -20,7 +26,7 @@ class BalanceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = settlementStateOf(balanceRial);
-    final color = AppColors.forState(state);
+    final color = AppColors.settlementColor(context, state);
     final theme = Theme.of(context);
     final style = (compact
             ? theme.textTheme.labelSmall
@@ -39,6 +45,8 @@ class BalanceChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Icon(_stateIcon(state), size: compact ? 13 : 15, color: color),
+          const SizedBox(width: 4),
           Text(state.label, style: style),
           if (showAmount) ...[
             const SizedBox(width: 6),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/help/help_page.dart';
 import '../../../core/providers/database_providers.dart';
+import '../../../core/theme/app_tokens.dart';
 import '../../../core/utils/persian_digits.dart';
 import '../../../data/db/app_database.dart';
 import '../../../domain/enums.dart';
@@ -11,6 +13,7 @@ import '../../../shared/widgets/app_dialogs.dart';
 import '../../../shared/widgets/balance_chip.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/money_text.dart';
+import '../../../shared/widgets/settings_button.dart';
 import '../../employers/state/employer_providers.dart';
 import '../state/payment_providers.dart';
 import 'widgets/payment_form_sheet.dart';
@@ -83,7 +86,12 @@ class PaymentsPage extends ConsumerWidget {
                     ),
                   )
                 : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 96),
+                    padding: EdgeInsets.fromLTRB(
+                      12,
+                      4,
+                      12,
+                      AppTokens.navClearance(context),
+                    ),
                     itemCount: payments.length,
                     separatorBuilder: (_, _) =>
                         Divider(height: 1, color: theme.colorScheme.outlineVariant),
@@ -128,8 +136,17 @@ class PaymentsPage extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('پرداخت‌ها')),
+      appBar: AppBar(
+        title: const Text('پرداخت‌ها'),
+        actions: const [
+          ContextHelpButton(topicId: 'add-payment'),
+          SettingsButton(),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
+        // The tabs live together in an IndexedStack; a default hero tag would
+        // clash with the employers FAB during route transitions.
+        heroTag: null,
         onPressed: () => showPaymentFormSheet(context),
         icon: const Icon(Icons.add_rounded),
         label: const Text('پرداخت'),

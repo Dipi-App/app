@@ -14,6 +14,9 @@ class AppSettings {
     this.lastBackupAt,
     this.lastBackupReminderAt,
     this.driveAccountEmail,
+    this.onboardingSeen = false,
+    this.voiceHintsEnabled = true,
+    this.coachMarksSeen = const {},
   });
 
   final CurrencyUnit currencyUnit;
@@ -27,6 +30,15 @@ class AppSettings {
   final String? lastBackupAt;
   final String? lastBackupReminderAt;
   final String? driveAccountEmail;
+
+  /// True once the first-run slideshow has been completed or skipped.
+  final bool onboardingSeen;
+
+  /// Whether the little speaker buttons read help text aloud.
+  final bool voiceHintsEnabled;
+
+  /// Ids of the one-time coach-mark tips the user has already seen.
+  final Set<String> coachMarksSeen;
 
   DateTime? get lastBackupDate =>
       lastBackupAt == null ? null : DateTime.tryParse(lastBackupAt!);
@@ -47,6 +59,9 @@ class AppSettings {
     String? lastBackupReminderAt,
     String? driveAccountEmail,
     bool clearDriveAccount = false,
+    bool? onboardingSeen,
+    bool? voiceHintsEnabled,
+    Set<String>? coachMarksSeen,
   }) {
     return AppSettings(
       currencyUnit: currencyUnit ?? this.currencyUnit,
@@ -63,6 +78,9 @@ class AppSettings {
       lastBackupReminderAt: lastBackupReminderAt ?? this.lastBackupReminderAt,
       driveAccountEmail:
           clearDriveAccount ? null : (driveAccountEmail ?? this.driveAccountEmail),
+      onboardingSeen: onboardingSeen ?? this.onboardingSeen,
+      voiceHintsEnabled: voiceHintsEnabled ?? this.voiceHintsEnabled,
+      coachMarksSeen: coachMarksSeen ?? this.coachMarksSeen,
     );
   }
 
@@ -78,6 +96,9 @@ class AppSettings {
     'lastBackupAt': lastBackupAt ?? '',
     'lastBackupReminderAt': lastBackupReminderAt ?? '',
     'driveAccountEmail': driveAccountEmail ?? '',
+    'onboardingSeen': onboardingSeen.toString(),
+    'voiceHintsEnabled': voiceHintsEnabled.toString(),
+    'coachMarksSeen': coachMarksSeen.join(','),
   };
 
   static AppSettings fromMap(Map<String, String?> map) {
@@ -98,6 +119,12 @@ class AppSettings {
       lastBackupAt: nonEmpty('lastBackupAt'),
       lastBackupReminderAt: nonEmpty('lastBackupReminderAt'),
       driveAccountEmail: nonEmpty('driveAccountEmail'),
+      onboardingSeen: map['onboardingSeen'] == 'true',
+      voiceHintsEnabled: map['voiceHintsEnabled'] != 'false',
+      coachMarksSeen: (map['coachMarksSeen'] ?? '')
+          .split(',')
+          .where((id) => id.isNotEmpty)
+          .toSet(),
     );
   }
 }

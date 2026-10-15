@@ -2,6 +2,10 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/help/coach_mark.dart';
+import '../../../../core/help/help_content.dart';
+import '../../../../core/help/help_page.dart';
+import '../../../../core/help/voice_hints.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/utils/jalali_utils.dart';
 import '../../../../data/db/app_database.dart';
@@ -59,7 +63,26 @@ class _PaymentFormSheetState extends ConsumerState<PaymentFormSheet> {
         tryParseIsoDate(payment?.date)?.toLocal() ?? dateOnly(DateTime.now());
     _amountRial = payment?.amount;
     _type = PaymentType.fromName(payment?.type);
+    if (!_isEditing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        showCoachMarks(
+          context,
+          ref,
+          id: 'payment',
+          steps: [
+            CoachMarkStep(
+              targetKey: _employerKey,
+              title: 'پول از طرف کی بود؟',
+              message: 'کارفرما و مبلغ پرداخت را انتخاب کن، بعد «ثبت» را بزن.',
+            ),
+          ],
+        );
+      });
+    }
   }
+
+  final _employerKey = GlobalKey();
 
   @override
   void dispose() {
@@ -155,6 +178,16 @@ class _PaymentFormSheetState extends ConsumerState<PaymentFormSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Row(
+            children: [
+              const Spacer(),
+              VoiceHintButton(
+                text: HelpContent.addPayment.speechText,
+                compact: true,
+              ),
+              const ContextHelpButton(topicId: 'add-payment'),
+            ],
+          ),
           if (options.isEmpty)
             _NoEmployersHint(
               onCreate: () async {
@@ -169,6 +202,7 @@ class _PaymentFormSheetState extends ConsumerState<PaymentFormSheet> {
             )
           else
             DropdownButtonFormField<int>(
+              key: _employerKey,
               initialValue: _employerId,
               isExpanded: true,
               decoration: InputDecoration(
