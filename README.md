@@ -1,233 +1,79 @@
-# دیپی (Dipi)
+# Dipi (دیپی)
 
-> دیپی: واژه‌ای پارسی باستانی به معنای نوشتن و ثبت کردن.
-> A paper-notebook replacement for workers: log workdays and payments on a
-> Jalali calendar and always know who owes whom — fully offline, Persian, RTL.
-
-[![Build & Release](https://github.com/mst-ghi/dipi/actions/workflows/build.yml/badge.svg)](https://github.com/mst-ghi/dipi/actions/workflows/build.yml)
-[![Latest release](https://img.shields.io/github/v/release/mst-ghi/dipi)](https://github.com/mst-ghi/dipi/releases/latest)
-
-## دانلود و نصب (فارسی)
+**Dipi** is a free, offline Android app for workers and tradespeople: log your
+workdays and payments on a Jalali calendar and always know who owes whom.
+Everything stays on your phone — no account, no sign-up, no internet required.
 
 <p align="center">
-  <a href="https://github.com/mst-ghi/dipi/releases/latest">
-    <img src="https://img.shields.io/badge/%D8%AF%D8%A7%D9%86%D9%84%D9%88%D8%AF-%D8%A2%D8%AE%D8%B1%DB%8C%D9%86_%D9%86%D8%B3%D8%AE%D9%87-0D3B42?style=for-the-badge&logo=android&logoColor=white" alt="Download the latest release" height="48">
+  <a href="https://github.com/Dipi-App/app/releases/latest">
+    <img src="https://img.shields.io/badge/Download-latest%20release-0D3B42?style=for-the-badge&logo=android&logoColor=white" alt="Download the latest release" height="44">
   </a>
 </p>
 
-۱. روی دکمه **دانلود** بالا بزن. صفحه‌ی Releases باز می‌شود و همیشه فایل‌های
-   **آخرین نسخه** آنجا هستند.
-۲. **کدام فایل؟** برای بیشتر گوشی‌ها فایل `dipi-<نسخه>.apk` را بردار؛ روی همه‌ی
-   گوشی‌ها نصب می‌شود. اگر فایل سبک‌تر می‌خواهی، `dipi-<نسخه>-arm64-v8a.apk`
-   برای تقریباً همه‌ی گوشی‌های جدید مناسب است.
-۳. فایل دانلود‌شده را در گوشی باز کن.
-۴. اگر گوشی پیام داد، اجازه‌ی **نصب از این منبع** را روشن کن (گوشی‌های جدید
-   معمولاً خودشان راهنمایی می‌کنند).
-۵. اگر Play Protect هشدار داد، **More details** و بعد **Install anyway** را بزن.
-۶. «نصب» را بزن. تمام! دیپی بدون اینترنت کار می‌کند.
+[![Build & Release](https://github.com/Dipi-App/app/actions/workflows/build.yml/badge.svg)](https://github.com/Dipi-App/app/actions/workflows/build.yml)
+[![Latest release](https://img.shields.io/github/v/release/Dipi-App/app)](https://github.com/Dipi-App/app/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> راهنمای گام‌به‌گام با تصویر کلامی، بررسی SHA-256 و روش «More details /
-> Install anyway» در [`docs/INSTALL.fa.md`](docs/INSTALL.fa.md) آمده است.
-
-## Download & install (English)
-
-1. Tap the **Download** button above; the Releases page always holds the
-   **latest** files.
-2. **Which file?** Take `dipi-<version>.apk` — it installs on any phone. Want a
-   smaller file? `dipi-<version>-arm64-v8a.apk` fits almost every modern phone.
-3. Open the downloaded file on the phone.
-4. If Android asks, allow **installing from this source** for your file manager
-   (newer Android shows a one-tap guide).
-5. If Play Protect warns, tap **More details → Install anyway**. It is normal for
-   any app installed outside Play.
-6. Tap **Install**. Done — Dipi works with no internet connection.
-
-The step-by-step guide (including how to check the SHA-256 and the exact
-"More details / Install anyway" wording) lives in
-[`docs/INSTALL.fa.md`](docs/INSTALL.fa.md).
-
-Dipi never installs packages itself: when a newer version exists it only shows a
-message and a button that opens this page in your browser. Each release also
-publishes `<file>.apk.sha256` so the download can be verified.
+- Website: <https://dipi-app.github.io/>
+- Latest release: <https://github.com/Dipi-App/app/releases/latest>
+- Installation guide: [docs/INSTALL.fa.md](docs/INSTALL.fa.md)
 
 ## Features
 
-- **Calendar** — the Jalali month grid sits in a rounded card: worked days are
-  filled with the employer's colour, a day with several employers shows small
-  dots, today has a gold ring and the selected day a solid fill. A card below the
-  calendar shows the selected day (employer, place, job, times, wage, expense,
-  note) with big Edit/Delete buttons, or a friendly "add workday" card if empty.
-- **Employers** — add/edit (name, colour, phone, note, default wage),
-  archive/restore, delete, and a detail page with totals.
-- **Work entries** — employer, place, job, times (a new workday starts at
-  08:00–17:00; cross-midnight shifts are supported), fixed/variable wage,
-  out-of-pocket money and a note; smart defaults (today, last employer, last
-  place/job).
-- **Payments** — one clean card per payment (employer colour + name, big bold
-  amount, date and a one-line note, a type icon), grouped by Jalali month with a
-  sticky header and month total. Filter by employer, type and date range, swipe
-  to delete with confirm + undo, and a running total-received / balance summary.
-- **Settlement & stats** — big summary cards (workdays, wage, received, the
-  balance as "طلب شما" / "بدهی شما" with an icon, and money to claim back), a
-  simple monthly bar chart with the value written on each bar, and one card per
-  employer. A "?" opens a short guide.
-- **Backup & export** — a JSON file written automatically every 12 hours to
-  `Documents/dipi/` (kept as the last 14 copies), manual JSON export/import, and
-  txt/md/docx export that stays right-to-left.
-- **App lock** — optional 4–8 digit PIN (salted SHA-256) with fingerprint.
-- **Auto-update** — the app checks the latest GitHub release and installs a
-  verified, ABI-matched APK in place (same signer, data kept); see
-  [`docs/auto-update.md`](docs/auto-update.md).
-- **Made for low literacy** — big icons and short Persian labels everywhere, a
-  floating bottom bar with a large "add workday" center button, first-run
-  onboarding, contextual "?" guides, one-time coach marks and optional spoken
-  help (device Persian voice required).
+- **Work calendar** — log every workday on a Jalali month grid, with the employer
+  shown by colour and a summary card for the selected day.
+- **Employer management** — add, edit, archive and delete employers, each with its
+  own colour, phone, note and default wage.
+- **Payment tracking and balance** — record payments per employer and see the
+  running balance ("owed to you" / "owed by you") at a glance.
+- **Statistics** — workday, wage and payment totals, a monthly bar chart and one
+  card per employer.
+- **Works fully offline** — no server, no account, no network calls for your data.
+- **No sign-up required** — install and start working; nothing to register.
+- **Persian and RTL support** — a fully right-to-left interface with Persian
+  digits throughout.
+- **Automatic local JSON backup** — the app writes a JSON backup to your phone's
+  storage every 12 hours and keeps the most recent copies.
 
-## Requirements
+## Screenshots
 
-- Flutter 3.47+ (stable), Dart 3.13+, Java 17 for Android builds.
-- Persian is the only language; the app is fully RTL and uses Persian digits.
+<!-- Replace the placeholders below with real screenshots once available. -->
 
-## Build
+| Calendar | Employers | Payments | Statistics |
+| --- | --- | --- | --- |
+| _screenshot placeholder_ | _screenshot placeholder_ | _screenshot placeholder_ | _screenshot placeholder_ |
+
+## Download
+
+Get the latest APK from the
+[**latest release**](https://github.com/Dipi-App/app/releases/latest).
+For step-by-step help (allowing install from this source, the "Install anyway"
+prompt and checking the SHA-256), see the
+[installation guide](docs/INSTALL.fa.md).
+
+## Build from source
+
+Requirements: Flutter (stable), Dart and Java 17 for Android builds.
 
 ```bash
-export PATH="/home/mostafa/flutter/bin:$PATH"        # use Flutter's Dart, not a standalone SDK
-export PUB_HOSTED_URL=https://pub.flutter-io.cn      # pub.dev is unreachable on the maintainer's machine
-
 flutter pub get
-dart run build_runner build --delete-conflicting-outputs   # drift codegen
-flutter analyze                                            # must stay clean
-flutter test
-flutter build apk --debug
+flutter run
 ```
 
-Regenerate the app icon and splash after changing the artwork:
+## Contributing
 
-```bash
-dart run flutter_launcher_icons
-dart run flutter_native_splash:create
-```
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before
+opening an issue or a pull request, and follow the
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
-Release builds optionally use `android/key.properties` for signing (see below).
-When it is missing the build falls back to the debug keys.
+## License
 
-## CI/CD & releases
+Released under the [MIT License](LICENSE).
 
-Every push to `main` runs the **Build & Release** workflow
-(`.github/workflows/build.yml`): it analyzes, tests, bumps the version, tags,
-builds `--split-per-abi` plus a universal APK, uploads them as artifacts and
-publishes a GitHub Release with auto-generated notes. No release is made when a
-push contains no `feat:`/`fix:`/breaking commit.
+## Website
 
-See [`docs/RELEASE.md`](docs/RELEASE.md) for the step-by-step guide.
+<https://dipi-app.github.io/>
 
-### GitHub secrets to add
+---
 
-Repository → Settings → Secrets and variables → Actions → **New repository
-secret**:
-
-| Secret | What it is |
-| --- | --- |
-| `KEYSTORE_BASE64` | the `.jks` keystore encoded with `base64 -w0 keystore.jks` |
-| `KEYSTORE_PASSWORD` | the keystore password |
-| `KEY_ALIAS` | the key alias inside the keystore |
-| `KEY_PASSWORD` | the key password |
-
-`GITHUB_TOKEN` is provided automatically; the workflow only asks for
-`contents: write`.
-
-Create a keystore once:
-
-```bash
-keytool -genkeypair -v -keystore dipi-release.jks -keyalg RSA -keysize 2048 \
-  -validity 10000 -alias dipi
-base64 -w0 dipi-release.jks     # paste this into KEYSTORE_BASE64
-```
-
-## Versioning
-
-Semantic versioning `MAJOR.MINOR.PATCH+BUILD`, kept in `pubspec.yaml`
-(`version:`). A small script (`scripts/bump_version.sh`) reads the Conventional
-Commits since the last `vX.Y.Z` tag — `feat!:`/`BREAKING CHANGE` → major,
-`feat:` → minor, `fix:` → patch — updates `pubspec.yaml` and `CHANGELOG.md`,
-and the workflow tags `vX.Y.Z`. The build number grows on every release (Android
-needs a new version code each time), and the bump commit carries `[skip ci]` so
-it never triggers another run. This is simpler and more predictable than
-`release-please` because the version lives in exactly one file (`pubspec.yaml`)
-that Flutter already reads for the APK's `versionName`/`versionCode`.
-
-Use Conventional Commits: `feat: …`, `fix: …`, `chore: …`, `feat!: …`.
-
-## Layout
-
-```
-lib/
-  app.dart                     MaterialApp: locale fa, RTL, themes, AppGate
-  main.dart                    ProviderScope + runApp
-  core/
-    constants/                 app_info, work_defaults (08:00–17:00)
-    help/                      help text, help screen, coach marks, voice hints
-    providers/                 database + DAO + app-info providers
-    theme/                     brand colour scheme, tokens, employer palette
-    utils/                     persian_digits, jalali_utils, money, time_utils
-    widgets/                   floating nav bar, shared header, directional icons
-  data/db/                     drift tables, database, generated code, DAOs
-  domain/                      enums, balance rule, entry statistics
-  features/<feature>/          domain / presentation / state
-  features/app_update/         GitHub release check, download, install
-  features/backup/             JSON backup/restore, auto backup, local backup
-  presentation/                home shell, app gate
-  shared/                      widgets + motion helper + branding (DipiMark)
-packages/dipi_documents/       local plugin: MediaStore → Documents/dipi
-assets/                        fonts (Vazirmatn), branding, lottie animation
-scripts/bump_version.sh        conventional-commit version bump
-docs/RELEASE.md                how to cut a release
-docs/auto-update.md            in-app update flow
-```
-
-`lib/data/db/app_database.g.dart` and the launcher icon / splash output are
-generated — never edit them by hand.
-
-## Invariants
-
-- Persian only, full RTL, Persian digits everywhere in the UI.
-- Dates live in the database as Gregorian ISO text (`YYYY-MM-DD`).
-- Money is **integer Rial** and never a `double`; Toman is display/entry only.
-- No network calls except the GitHub release check.
-- Business logic (balance, stats) lives in pure Dart classes, not widgets.
-
-## Tests
-
-```bash
-flutter test
-```
-
-Widget tests that mount `DipiApp` must unmount it inside the test body and pump
-one extra frame, otherwise drift's zero-duration cleanup timer trips
-`!timersPending`:
-
-```dart
-await tester.pumpWidget(const SizedBox.shrink());
-await tester.pump(const Duration(milliseconds: 1));
-```
-
-## Automatic backup
-
-Every 12 hours (and on start when the last one is older than 12 hours) the app
-writes `Documents/dipi/dipi_backup_YYYYMMDD_HHmm.json` through Android
-`MediaStore` — no storage permission, and the OS never uploads app data
-(`android:allowBackup="false"`). Only the last 14 files are kept. The file
-shape is `{ schemaVersion, appVersion, createdAt, data }`, and both this file
-and a manual export can be restored from Settings.
-
-## Application id
-
-Set `dipiAppId` in `android/gradle.properties` — the single place. The Kotlin
-namespace stays `com.yourname.dipi` so no source file has to move.
-
-## Branding
-
-The visual identity lives in `assets/branding/` (a gold `D` with a cuneiform
-wedge on deep teal). `lib/core/theme/brand_colors.dart` holds the palette,
-`lib/shared/branding/dipi_logo.dart` the widgets, and the launcher icon plus
-splash are generated from those sources. See `assets/branding/BRANDING.md`.
+Developed by Mostafa — <https://mst-ghi.github.io/>

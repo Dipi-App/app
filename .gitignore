@@ -49,5 +49,8 @@ app.*.map.json
 *.jks
 *.keystore
 
+# Environment files — never commit these.
+.env*
+
 # Widget Preview related
 .widget_preview/
