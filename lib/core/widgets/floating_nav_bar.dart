@@ -42,19 +42,21 @@ class FloatingNavPrimaryAction {
 /// A hand-drawn floating bottom navigation bar.
 ///
 /// * Floats above the screen edges (margin + safe area + gesture bar).
-/// * The active pill slides smoothly between items instead of jumping.
 /// * The active icon scales up with a gentle bounce and the label turns bold.
-/// * Respects the "reduce motion" accessibility setting (colors only).
-/// * Is fully RTL aware (item order and slide direction).
+/// * Respects the "reduce motion" accessibility setting (colours only).
+/// * Is fully RTL aware (item order).
 /// * Carries a semantic label per item for screen readers.
-class FloatingNavBar extends StatefulWidget {
+class FloatingNavBar extends StatelessWidget {
   const FloatingNavBar({
     super.key,
     required this.selectedIndex,
     required this.items,
     required this.onSelected,
     this.primaryAction,
-  }) : assert(items.length >= 2 && items.length <= 4, '2–4 tabs plus the primary action');
+  }) : assert(
+         items.length >= 2 && items.length <= 4,
+         '2–4 tabs plus the primary action',
+       );
 
   /// Index into [items].
   final int selectedIndex;
@@ -62,75 +64,9 @@ class FloatingNavBar extends StatefulWidget {
   final ValueChanged<int> onSelected;
   final FloatingNavPrimaryAction? primaryAction;
 
-  @override
-  State<FloatingNavBar> createState() => _FloatingNavBarState();
-}
+  int get _primarySlot => primaryAction == null ? -1 : items.length ~/ 2;
 
-class _FloatingNavBarState extends State<FloatingNavBar>
-    with SingleTickerProviderStateMixin {
-  static const _duration = Duration(milliseconds: 300);
-
-  late final AnimationController _controller;
-  late Animation<double> _slotAnimation;
-  double _slot = 0;
-
-  int get _primarySlot =>
-      widget.primaryAction == null ? -1 : widget.items.length ~/ 2;
-
-  int get _totalSlots => widget.items.length + (widget.primaryAction == null ? 0 : 1);
-
-  int _slotForTab(int tabIndex) {
-    final primary = _primarySlot;
-    if (primary < 0 || tabIndex < primary) return tabIndex;
-    return tabIndex + 1;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _slot = _slotForTab(widget.selectedIndex).toDouble();
-    _controller = AnimationController(vsync: this, duration: _duration);
-    _slotAnimation = Tween<double>(begin: _slot, end: _slot).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) _slot = _slotAnimation.value;
-    });
-  }
-
-  @override
-  void didUpdateWidget(FloatingNavBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedIndex != widget.selectedIndex ||
-        oldWidget.primaryAction != widget.primaryAction) {
-      final target = _slotForTab(widget.selectedIndex).toDouble();
-      // Retarget from wherever the pill currently is so fast taps stay smooth.
-      _slotAnimation = Tween<double>(begin: _slotAnimation.value, end: target)
-          .animate(
-            CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-          );
-      if (reduceMotion(context)) {
-        _controller.value = 1;
-        _slot = target;
-      } else {
-        _controller
-          ..reset()
-          ..forward();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _handleTab(int index) {
-    if (index == widget.selectedIndex) return;
-    HapticFeedback.selectionClick();
-    widget.onSelected(index);
-  }
+  int get _totalSlots => items.length + (primaryAction == null ? 0 : 1);
 
   @override
   Widget build(BuildContext context) {
@@ -162,53 +98,11 @@ class _FloatingNavBarState extends State<FloatingNavBar>
         ),
         child: SizedBox(
           height: AppTokens.navHeight,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth;
-              final slotWidth = width / _totalSlots;
-              final pillWidth = slotWidth - AppTokens.space8;
-              final rtl = Directionality.of(context) == TextDirection.rtl;
-
-              double leftForSlot(double slot) {
-                final fromLeft = rtl
-                    ? width - (slot + 1) * slotWidth
-                    : slot * slotWidth;
-                return fromLeft + AppTokens.space4;
-              }
-
-              return Stack(
-                children: [
-                  // Sliding pill highlight behind the active tab.
-                  AnimatedBuilder(
-                    animation: _slotAnimation,
-                    builder: (context, _) {
-                      return Positioned(
-                        left: leftForSlot(_slotAnimation.value),
-                        top: AppTokens.navInnerPadding,
-                        bottom: AppTokens.navInnerPadding,
-                        width: pillWidth,
-                        child: IgnorePointer(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: scheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(
-                                AppTokens.radiusLarge,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  Row(
-                    children: [
-                      for (var i = 0; i < _totalSlots; i++)
-                        Expanded(child: _slotAt(i, slotWidth)),
-                    ],
-                  ),
-                ],
-              );
-            },
+          child: Row(
+            children: [
+              for (var i = 0; i < _totalSlots; i++)
+                Expanded(child: _slotAt(i)),
+            ],
           ),
         ),
       ),
@@ -216,17 +110,14 @@ class _FloatingNavBarState extends State<FloatingNavBar>
 
     // Clamp the text scale a little so a huge system font can never overflow
     // the fixed-height bar (the labels stay readable, just not enormous).
-    return MediaQuery.withClampedTextScaling(
-      maxScaleFactor: 1.3,
-      child: bar,
-    );
+    return MediaQuery.withClampedTextScaling(maxScaleFactor: 1.3, child: bar);
   }
 
-  Widget _slotAt(int slotIndex, double slotWidth) {
+  Widget _slotAt(int slotIndex) {
     final primarySlot = _primarySlot;
     if (slotIndex == primarySlot) {
       return _PrimarySlot(
-        action: widget.primaryAction!,
+        action: primaryAction!,
         height: AppTokens.navHeight,
       );
     }
@@ -234,9 +125,13 @@ class _FloatingNavBarState extends State<FloatingNavBar>
         ? slotIndex
         : slotIndex - 1;
     return _NavTab(
-      item: widget.items[tabIndex],
-      selected: tabIndex == widget.selectedIndex,
-      onTap: () => _handleTab(tabIndex),
+      item: items[tabIndex],
+      selected: tabIndex == selectedIndex,
+      onTap: () {
+        if (tabIndex == selectedIndex) return;
+        HapticFeedback.selectionClick();
+        onSelected(tabIndex);
+      },
     );
   }
 }

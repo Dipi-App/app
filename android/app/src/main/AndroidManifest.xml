@@ -1,6 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Google Drive backup (drive.appdata scope) and the GitHub release check
-         are the only network features. -->
+    <!-- The GitHub release check is the only network feature. -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- In-app update: allow handing a downloaded APK to the package installer. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
@@ -11,7 +10,8 @@
     <application
         android:label="دیپی"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/backup/state/backup_providers.dart';
+import '../features/backup/data/local_backup_service.dart';
 import '../features/lock/presentation/lock_screen.dart';
 import '../features/lock/state/lock_providers.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
@@ -53,33 +53,22 @@ class _AppGateState extends ConsumerState<AppGate>
     }
   }
 
-  /// Runs a silent Drive backup when the toggle is on and the last one is stale.
+  /// Writes a local backup on start when the last one is over 12 hours old.
+  /// The 12-hour periodic worker does the same while the app is closed.
   Future<void> _maybeAutoBackup() async {
     if (_autoBackupChecked) return;
     _autoBackupChecked = true;
     final settings = ref.read(settingsValueProvider);
-    if (!settings.autoBackupEnabled) return;
-
-    final service = ref.read(driveBackupServiceProvider);
-    if (!service.isConfigured) return;
-
-    final last = settings.lastBackupDate;
-    if (last != null && DateTime.now().difference(last) < const Duration(days: 1)) {
-      return;
-    }
+    final due = isAutoBackupDue(
+      now: DateTime.now(),
+      lastBackup: settings.lastBackupDate,
+    );
+    if (!due) return;
 
     try {
-      final account = await service.restoreSession();
-      if (account == null) return;
-      final json = await ref
-          .read(backupRepositoryProvider)
-          .exportJson(settings: settings.toMap());
-      await service.upload(json);
-      await ref
-          .read(settingsControllerProvider.notifier)
-          .setLastBackupAt(DateTime.now());
+      await ref.read(localBackupServiceProvider).createBackup();
     } catch (_) {
-      // Auto backup must never bother the user; failures are retried next time.
+      // Automatic backup must never bother the user; it is retried next time.
     }
   }
 

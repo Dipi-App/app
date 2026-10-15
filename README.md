@@ -63,8 +63,9 @@ every version, so always download the newest one from the Releases page.
   balance as "طلب شما" / "بدهی شما" with an icon, and money to claim back), a
   simple monthly bar chart with the value written on each bar, and one card per
   employer. A "?" opens a short guide.
-- **Backup & export** — one JSON file, local or Google Drive (`drive.appdata`),
-  and txt/md/docx export that stays right-to-left.
+- **Backup & export** — a JSON file written automatically every 12 hours to
+  `Documents/dipi/` (kept as the last 14 copies), manual JSON export/import, and
+  txt/md/docx export that stays right-to-left.
 - **App lock** — optional 4–8 digit PIN (salted SHA-256) with fingerprint.
 - **Auto-update** — the app checks the latest GitHub release and installs a
   verified, ABI-matched APK in place (same signer, data kept); see
@@ -165,11 +166,15 @@ lib/
   data/db/                     drift tables, database, generated code, DAOs
   domain/                      enums, balance rule, entry statistics
   features/<feature>/          domain / presentation / state
+  features/app_update/         GitHub release check, download, install
+  features/backup/             JSON backup/restore, auto backup, local backup
   presentation/                home shell, app gate
   shared/                      widgets + motion helper + branding (DipiMark)
+packages/dipi_documents/       local plugin: MediaStore → Documents/dipi
 assets/                        fonts (Vazirmatn), branding, lottie animation
 scripts/bump_version.sh        conventional-commit version bump
 docs/RELEASE.md                how to cut a release
+docs/auto-update.md            in-app update flow
 ```
 
 `lib/data/db/app_database.g.dart` and the launcher icon / splash output are
@@ -180,7 +185,7 @@ generated — never edit them by hand.
 - Persian only, full RTL, Persian digits everywhere in the UI.
 - Dates live in the database as Gregorian ISO text (`YYYY-MM-DD`).
 - Money is **integer Rial** and never a `double`; Toman is display/entry only.
-- No network calls except the optional Google Drive backup.
+- No network calls except the GitHub release check.
 - Business logic (balance, stats) lives in pure Dart classes, not widgets.
 
 ## Tests
@@ -198,21 +203,14 @@ await tester.pumpWidget(const SizedBox.shrink());
 await tester.pump(const Duration(milliseconds: 1));
 ```
 
-## Google Drive backup
+## Automatic backup
 
-The Drive client is written but stays disabled until you create an OAuth client
-in the [Google Cloud Console](https://console.cloud.google.com):
-
-1. Create a project, then **APIs & Services → Library → Google Drive API → Enable**.
-2. **OAuth consent screen**: type *External*, add only the scope
-   `.../auth/drive.appdata`, and add your own account under *Test users*.
-3. **Credentials** → create an **Android** client (package `dipiAppId` + your
-   SHA-1) and a **Web application** client (no redirect URI).
-4. Build with the **Web** client id:
-
-   ```bash
-   flutter build apk --dart-define=DIPI_GOOGLE_SERVER_CLIENT_ID=XXXX.apps.googleusercontent.com
-   ```
+Every 12 hours (and on start when the last one is older than 12 hours) the app
+writes `Documents/dipi/dipi_backup_YYYYMMDD_HHmm.json` through Android
+`MediaStore` — no storage permission, and the OS never uploads app data
+(`android:allowBackup="false"`). Only the last 14 files are kept. The file
+shape is `{ schemaVersion, appVersion, createdAt, data }`, and both this file
+and a manual export can be restored from Settings.
 
 ## Application id
 

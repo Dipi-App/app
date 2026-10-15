@@ -64,7 +64,32 @@ class BackupDocument {
       ? const JsonEncoder.withIndent('  ').convert(toJson())
       : jsonEncode(toJson());
 
+  /// The shape written by the automatic local backup:
+  /// `{ schemaVersion, appVersion, createdAt, data }`.
+  Map<String, Object?> toFileJson() => {
+    'schemaVersion': schemaVersion,
+    'appVersion': appVersion,
+    'createdAt': exportedAt,
+    'data': {
+      'employers': [for (final row in employers) row.toJson()],
+      'workEntries': [for (final row in workEntries) row.toJson()],
+      'payments': [for (final row in payments) row.toJson()],
+      'settings': settings,
+    },
+  };
+
+  String encodeForFile({bool pretty = true}) => pretty
+      ? const JsonEncoder.withIndent('  ').convert(toFileJson())
+      : jsonEncode(toFileJson());
+
   factory BackupDocument.fromJson(Map<String, Object?> json) {
+    // Automatically written files wrap the rows in a `data` object; the manual
+    // export keeps them flat. Accept both so either file can be restored.
+    final dataJson = json['data'];
+    final data = dataJson is Map
+        ? dataJson.cast<String, Object?>()
+        : json;
+
     final schemaVersion = _int(json, 'schemaVersion');
     if (schemaVersion > currentSchemaVersion) {
       throw BackupFormatException(
@@ -77,9 +102,9 @@ class BackupDocument {
       throw BackupFormatException('شماره قالب فایل پشتیبان معتبر نیست.');
     }
 
-    final employers = _rows(json, 'employers', BackupEmployer.fromJson);
-    final workEntries = _rows(json, 'workEntries', BackupWorkEntry.fromJson);
-    final payments = _rows(json, 'payments', BackupPayment.fromJson);
+    final employers = _rows(data, 'employers', BackupEmployer.fromJson);
+    final workEntries = _rows(data, 'workEntries', BackupWorkEntry.fromJson);
+    final payments = _rows(data, 'payments', BackupPayment.fromJson);
 
     final knownEmployers = {for (final employer in employers) employer.id};
     for (final entry in workEntries) {
@@ -99,7 +124,7 @@ class BackupDocument {
       }
     }
 
-    final settingsJson = json['settings'];
+    final settingsJson = data['settings'];
     final settings = <String, String>{};
     if (settingsJson is Map) {
       for (final entry in settingsJson.entries) {
@@ -112,7 +137,9 @@ class BackupDocument {
     return BackupDocument(
       schemaVersion: schemaVersion,
       appVersion: _string(json, 'appVersion', fallback: ''),
-      exportedAt: _string(json, 'exportedAt', fallback: ''),
+      exportedAt: dataJson is Map
+          ? _string(json, 'createdAt', fallback: '')
+          : _string(json, 'exportedAt', fallback: ''),
       employers: employers,
       workEntries: workEntries,
       payments: payments,

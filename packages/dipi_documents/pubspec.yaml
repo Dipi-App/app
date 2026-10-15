@@ -1,0 +1,19 @@
+name: dipi_documents
+description: "Writes files to the shared Documents/dipi folder via Android MediaStore (no storage permission)."
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.4
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: ir.dipi.dipi_documents
+        pluginClass: DipiDocumentsPlugin

@@ -124,48 +124,57 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           const SettingsButton(),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.only(bottom: AppTokens.navClearance(context)),
-        child: Column(
-          children: [
-            Flexible(
-              flex: 5,
-              child: _CalendarCard(
-                key: _calendarKey,
-                controller: _controller,
-                baseMonth: _baseMonth,
-                selected: _selected,
-                month: month,
-                onDayTap: _openDay,
-                onMonthChanged: (page) =>
-                    ref.read(visibleMonthProvider.notifier).goTo(_monthForPage(page)),
-              ),
-            ),
-            Flexible(
-              flex: 4,
-              child: AnimatedSwitcher(
-                duration: reduced
-                    ? Duration.zero
-                    : const Duration(milliseconds: 280),
-                switchInCurve: Curves.easeOutCubic,
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.05),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // The calendar keeps a stable height; the day card below takes the
+          // rest and scrolls, so a busy day never gets clipped.
+          final calendarHeight = (constraints.maxHeight * 0.5)
+              .clamp(280.0, 460.0)
+              .toDouble();
+          return Padding(
+            padding: EdgeInsets.only(bottom: AppTokens.navClearance(context)),
+            child: Column(
+              children: [
+                SizedBox(
+                  height: calendarHeight,
+                  child: _CalendarCard(
+                    key: _calendarKey,
+                    controller: _controller,
+                    baseMonth: _baseMonth,
+                    selected: _selected,
+                    month: month,
+                    onDayTap: _openDay,
+                    onMonthChanged: (page) => ref
+                        .read(visibleMonthProvider.notifier)
+                        .goTo(_monthForPage(page)),
                   ),
                 ),
-                child: _SelectedDayCard(
-                  key: ValueKey('day-${toIsoDate(_selected)}'),
-                  day: _selected,
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: reduced
+                        ? Duration.zero
+                        : const Duration(milliseconds: 280),
+                    switchInCurve: Curves.easeOutCubic,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.05),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    ),
+                    child: _SelectedDayCard(
+                      key: ValueKey('day-${toIsoDate(_selected)}'),
+                      day: _selected,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -231,6 +240,8 @@ class _CalendarCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             _MonthSummaryBar(monthKey: jalaliMonthKey(month)),
+            const SizedBox(height: 8),
+            const _CalendarLegend(),
           ],
         ),
       ),
@@ -331,28 +342,32 @@ class _MonthSummaryBar extends ConsumerWidget {
     );
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _SummaryChip(
             icon: Icons.event_available_outlined,
-            label: '${toPersianDigits(totals.dayCount)} روز',
+            label: 'کارکرد',
+            value: '${toPersianDigits(totals.dayCount)} روز',
             style: style,
           ),
           _SummaryChip(
             icon: Icons.schedule_outlined,
-            label: formatHours(totals.hours),
+            label: 'ساعت کار',
+            value: '${formatHours(totals.hours)} ساعت',
             style: style,
           ),
           _SummaryChip(
             icon: Icons.payments_outlined,
-            labelWidget: MoneyText(
+            label: 'دستمزد',
+            valueWidget: MoneyText(
               amountRial: totals.wageRial,
-              withUnit: false,
+              withUnit: true,
               style: style?.copyWith(fontWeight: FontWeight.w700),
             ),
             style: style,
@@ -360,7 +375,8 @@ class _MonthSummaryBar extends ConsumerWidget {
           if (totals.pendingCount > 0)
             _SummaryChip(
               icon: Icons.hourglass_empty_rounded,
-              label: '${toPersianDigits(totals.pendingCount)} در انتظار',
+              label: 'در انتظار',
+              value: '${toPersianDigits(totals.pendingCount)} روز',
               style: style?.copyWith(color: theme.colorScheme.tertiary),
             ),
         ],
@@ -372,34 +388,130 @@ class _MonthSummaryBar extends ConsumerWidget {
 class _SummaryChip extends StatelessWidget {
   const _SummaryChip({
     required this.icon,
-    this.label,
-    this.labelWidget,
+    required this.label,
+    this.value,
+    this.valueWidget,
     this.style,
   });
 
   final IconData icon;
-  final String? label;
-  final Widget? labelWidget;
+  final String label;
+  final String? value;
+  final Widget? valueWidget;
   final TextStyle? style;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Expanded(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 15, color: style?.color),
-          const SizedBox(width: 4),
-          Flexible(
-            child: labelWidget ??
-                Text(
-                  label ?? '—',
-                  overflow: TextOverflow.ellipsis,
-                  style: style,
-                ),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 14, color: style?.color),
+              const SizedBox(width: 4),
+              Flexible(
+                child: valueWidget ??
+                    Text(
+                      value ?? '—',
+                      overflow: TextOverflow.ellipsis,
+                      style: style,
+                    ),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Explains the small dots used on calendar days.
+class _CalendarLegend extends StatelessWidget {
+  const _CalendarLegend();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final style = theme.textTheme.labelSmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+    );
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12,
+      runSpacing: 4,
+      children: [
+        _LegendItem(
+          style: style,
+          marker: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: scheme.primary,
+              shape: BoxShape.circle,
+            ),
+          ),
+          label: 'رنگ کارفرما',
+        ),
+        _LegendItem(
+          style: style,
+          marker: Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: scheme.secondary, width: 2),
+            ),
+          ),
+          label: 'امروز',
+        ),
+        _LegendItem(
+          style: style,
+          marker: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: scheme.tertiary,
+              shape: BoxShape.circle,
+            ),
+          ),
+          label: 'در انتظار',
+        ),
+        Text('چند نقطه = چند کارفرما', style: style),
+      ],
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({required this.marker, required this.label, this.style});
+
+  final Widget marker;
+  final String label;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        marker,
+        const SizedBox(width: 4),
+        Text(label, style: style),
+      ],
     );
   }
 }

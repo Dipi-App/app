@@ -12,6 +12,7 @@ import '../../../domain/enums.dart';
 import '../../../shared/widgets/app_dialogs.dart';
 import '../../../shared/widgets/balance_chip.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/fade_scroll.dart';
 import '../../../shared/widgets/jalali_date_picker.dart';
 import '../../../shared/widgets/money_text.dart';
 import '../../../shared/widgets/settings_button.dart';
@@ -291,76 +292,80 @@ class _FilterBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              FilterChip(
-                label: const Text('همه کارفرماها'),
-                selected: filter.employerId == null,
-                onSelected: (_) => onEmployer(null),
-              ),
-              for (final employer in employers) ...[
-                const SizedBox(width: 8),
+        FadeScroll(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
                 FilterChip(
-                  avatar: CircleAvatar(
-                    backgroundColor: Color(employer.color),
-                    radius: 7,
-                  ),
-                  label: Text(employer.name),
-                  selected: filter.employerId == employer.id,
-                  onSelected: (selected) =>
-                      onEmployer(selected ? employer.id : null),
+                  label: const Text('همه کارفرماها'),
+                  selected: filter.employerId == null,
+                  onSelected: (_) => onEmployer(null),
                 ),
+                for (final employer in employers) ...[
+                  const SizedBox(width: 8),
+                  FilterChip(
+                    avatar: CircleAvatar(
+                      backgroundColor: Color(employer.color),
+                      radius: 7,
+                    ),
+                    label: Text(employer.name),
+                    selected: filter.employerId == employer.id,
+                    onSelected: (selected) =>
+                        onEmployer(selected ? employer.id : null),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
         const SizedBox(height: 6),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              FilterChip(
-                label: const Text('همه انواع'),
-                selected: filter.type == null,
-                onSelected: (_) => onType(null),
-              ),
-              for (final type in PaymentType.values) ...[
-                const SizedBox(width: 8),
+        FadeScroll(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
                 FilterChip(
-                  label: Text(type.label),
-                  selected: filter.type == type,
-                  onSelected: (selected) => onType(selected ? type : null),
+                  label: const Text('همه انواع'),
+                  selected: filter.type == null,
+                  onSelected: (_) => onType(null),
                 ),
-              ],
-              const SizedBox(width: 8),
-              ActionChip(
-                avatar: const Icon(Icons.date_range_outlined, size: 18),
-                label: Text(rangeLabel),
-                onPressed: onPickRange,
-              ),
-              if (filter.hasRange) ...[
-                const SizedBox(width: 8),
-                ActionChip(
-                  avatar: const Icon(Icons.close_rounded, size: 16),
-                  label: const Text('حذف بازه'),
-                  onPressed: onClearRange,
-                ),
-              ],
-              if (filter.isActive) ...[
-                const SizedBox(width: 8),
-                ActionChip(
-                  avatar: Icon(
-                    Icons.clear_rounded,
-                    size: 16,
-                    color: theme.colorScheme.onSurfaceVariant,
+                for (final type in PaymentType.values) ...[
+                  const SizedBox(width: 8),
+                  FilterChip(
+                    label: Text(type.label),
+                    selected: filter.type == type,
+                    onSelected: (selected) => onType(selected ? type : null),
                   ),
-                  label: const Text('پاک کردن'),
-                  onPressed: onClear,
+                ],
+                const SizedBox(width: 8),
+                ActionChip(
+                  avatar: const Icon(Icons.date_range_outlined, size: 18),
+                  label: Text(rangeLabel),
+                  onPressed: onPickRange,
                 ),
+                if (filter.hasRange) ...[
+                  const SizedBox(width: 8),
+                  ActionChip(
+                    avatar: const Icon(Icons.close_rounded, size: 16),
+                    label: const Text('حذف بازه'),
+                    onPressed: onClearRange,
+                  ),
+                ],
+                if (filter.isActive) ...[
+                  const SizedBox(width: 8),
+                  ActionChip(
+                    avatar: Icon(
+                      Icons.clear_rounded,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    label: const Text('پاک کردن'),
+                    onPressed: onClear,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ],

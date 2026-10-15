@@ -32,20 +32,11 @@ class SettingsController extends AsyncNotifier<AppSettings> {
   Future<void> setThemeChoice(ThemeChoice choice) =>
       _persist(_current.copyWith(themeChoice: choice));
 
-  Future<void> setAutoBackup(bool enabled) =>
-      _persist(_current.copyWith(autoBackupEnabled: enabled));
-
   Future<void> setLastBackupAt(DateTime at) =>
       _persist(_current.copyWith(lastBackupAt: at.toIso8601String()));
 
   Future<void> setLastBackupReminderAt(DateTime at) =>
       _persist(_current.copyWith(lastBackupReminderAt: at.toIso8601String()));
-
-  Future<void> setDriveAccount(String? email) => _persist(
-    email == null
-        ? _current.copyWith(clearDriveAccount: true)
-        : _current.copyWith(driveAccountEmail: email),
-  );
 
   /// Applies the settings carried inside a restored backup.
   Future<void> applyImported(Map<String, String> values) {

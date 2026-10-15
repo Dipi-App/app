@@ -17,6 +17,9 @@ import '../../app_update/domain/update_phase.dart';
 import '../../app_update/presentation/update_sheet.dart';
 import '../../app_update/state/update_controller.dart';
 import '../../app_update/state/update_providers.dart';
+import '../../backup/data/local_backup_service.dart';
+import '../../backup/domain/backup_document.dart';
+import '../../backup/presentation/backup_actions.dart';
 import '../../backup/presentation/backup_page.dart';
 import '../../export/presentation/export_page.dart';
 import '../../lock/presentation/pin_dialogs.dart';
@@ -123,6 +126,8 @@ class SettingsPage extends ConsumerWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 8),
+                const _BackupQuickActions(),
                 const Divider(),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -204,8 +209,8 @@ class SettingsPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'کاملاً آفلاین. هیچ داده‌ای به سرور فرستاده نمی‌شود؛ تنها '
-                  'ارتباط شبکه‌ای، پشتیبان‌گیری اختیاری در گوگل‌درایو است.',
+                  'کاملاً آفلاین. تنها ارتباط شبکه‌ای، بررسی نسخه جدید در گیت‌هاب '
+                  'است؛ داده‌های شما فقط روی همین گوشی می‌ماند.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     height: 1.8,
@@ -230,6 +235,77 @@ class SettingsPage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _BackupQuickActions extends ConsumerStatefulWidget {
+  const _BackupQuickActions();
+
+  @override
+  ConsumerState<_BackupQuickActions> createState() =>
+      _BackupQuickActionsState();
+}
+
+class _BackupQuickActionsState extends ConsumerState<_BackupQuickActions> {
+  bool _busy = false;
+
+  Future<void> _run(Future<String?> Function() action) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final errorColor = Theme.of(context).colorScheme.error;
+    setState(() => _busy = true);
+    try {
+      final message = await action();
+      if (message != null) {
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(message)));
+      }
+    } on BackupFormatException catch (error) {
+      _error(messenger, errorColor, error.message);
+    } on LocalBackupException catch (error) {
+      _error(messenger, errorColor, error.message);
+    } catch (error) {
+      _error(messenger, errorColor, '$error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _error(ScaffoldMessengerState messenger, Color color, String message) {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: color,
+          duration: const Duration(seconds: 8),
+        ),
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: FilledButton.icon(
+            onPressed: _busy ? null : () => _run(() => createLocalBackupNow(ref)),
+            icon: const Icon(Icons.backup_outlined),
+            label: const Text('پشتیبان‌گیری الان'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _busy
+                ? null
+                : () => _run(() => restoreBackupFromFile(context, ref)),
+            icon: const Icon(Icons.restore_rounded),
+            label: const Text('بازگردانی از فایل'),
+          ),
+        ),
+      ],
     );
   }
 }

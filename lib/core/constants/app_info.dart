@@ -11,26 +11,23 @@ class AppInfo {
   static const int schemaVersion = 1;
 
   static const String backupPrefix = 'dipi-backup-';
-  static const String backupScheme = 'dipi-backup';
 
-  /// Android needs the **Web** OAuth client id (not the Android one) so the
-  /// Google Drive scope can be requested. Pass it at build time:
-  ///
-  /// flutter build apk --dart-define=DIPI_GOOGLE_SERVER_CLIENT_ID=xxxx.apps.googleusercontent.com
-  ///
-  /// See AGENTS.md → "Google Drive backup" for the exact Cloud Console steps.
-  static const String googleServerClientId = String.fromEnvironment(
-    'DIPI_GOOGLE_SERVER_CLIENT_ID',
-  );
-
-  static bool get googleBackupConfigured =>
-      googleServerClientId.trim().isNotEmpty;
+  /// Files written automatically to `Documents/dipi/`.
+  static const String autoBackupPrefix = 'dipi_backup_';
 
   static String backupFileName(DateTime now) {
     final y = now.year.toString().padLeft(4, '0');
     final m = now.month.toString().padLeft(2, '0');
     final d = now.day.toString().padLeft(2, '0');
     return '$backupPrefix$y$m$d.json';
+  }
+
+  /// `dipi_backup_YYYYMMDD_HHmm.json`
+  static String autoBackupFileName(DateTime now) {
+    String two(int value) => value.toString().padLeft(2, '0');
+    return '$autoBackupPrefix'
+        '${now.year.toString().padLeft(4, '0')}'
+        '${two(now.month)}${two(now.day)}_${two(now.hour)}${two(now.minute)}.json';
   }
 
   static String exportBaseName(DateTime now) {

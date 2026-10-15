@@ -14,6 +14,7 @@ import '../../../domain/settlement.dart';
 import '../../../domain/stats.dart';
 import '../../../shared/widgets/balance_chip.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/fade_scroll.dart';
 import '../../../shared/widgets/jalali_date_picker.dart';
 import '../../../shared/widgets/money_text.dart';
 import '../../../shared/widgets/section_card.dart';
@@ -198,52 +199,56 @@ class _FilterBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (final preset in StatsRangePreset.values) ...[
-                if (preset != StatsRangePreset.values.first)
-                  const SizedBox(width: 8),
-                ChoiceChip(
-                  label: Text(preset.label),
-                  selected: filter.preset == preset,
-                  onSelected: (_) => onPreset(preset),
+        FadeScroll(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final preset in StatsRangePreset.values) ...[
+                  if (preset != StatsRangePreset.values.first)
+                    const SizedBox(width: 8),
+                  ChoiceChip(
+                    label: Text(preset.label),
+                    selected: filter.preset == preset,
+                    onSelected: (_) => onPreset(preset),
+                  ),
+                ],
+                const SizedBox(width: 8),
+                ActionChip(
+                  avatar: const Icon(Icons.date_range_outlined, size: 18),
+                  label: const Text('بازه دلخواه'),
+                  onPressed: onCustomRange,
                 ),
               ],
-              const SizedBox(width: 8),
-              ActionChip(
-                avatar: const Icon(Icons.date_range_outlined, size: 18),
-                label: const Text('بازه دلخواه'),
-                onPressed: onCustomRange,
-              ),
-            ],
+            ),
           ),
         ),
         const SizedBox(height: 8),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              ChoiceChip(
-                label: const Text('همه کارفرماها'),
-                selected: filter.employerId == null,
-                onSelected: (_) => onEmployer(null),
-              ),
-              for (final employer in employers) ...[
-                const SizedBox(width: 8),
+        FadeScroll(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
                 ChoiceChip(
-                  avatar: CircleAvatar(
-                    backgroundColor: Color(employer.color),
-                    radius: 7,
-                  ),
-                  label: Text(employer.name),
-                  selected: filter.employerId == employer.id,
-                  onSelected: (selected) =>
-                      onEmployer(selected ? employer.id : null),
+                  label: const Text('همه کارفرماها'),
+                  selected: filter.employerId == null,
+                  onSelected: (_) => onEmployer(null),
                 ),
+                for (final employer in employers) ...[
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    avatar: CircleAvatar(
+                      backgroundColor: Color(employer.color),
+                      radius: 7,
+                    ),
+                    label: Text(employer.name),
+                    selected: filter.employerId == employer.id,
+                    onSelected: (selected) =>
+                        onEmployer(selected ? employer.id : null),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
         const SizedBox(height: 8),

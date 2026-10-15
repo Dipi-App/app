@@ -35,16 +35,30 @@ class DayCell extends StatelessWidget {
     final j = toJalali(day);
     final worked = colors.isNotEmpty;
 
-    final fill = selected
-        ? scheme.primary
-        : (worked ? Color(colors.first) : null);
-    final foreground = selected
-        ? scheme.onPrimary
-        : (worked ? Colors.white : scheme.onSurface);
+    // The employer colour always wins for a worked day; selection adds a ring
+    // instead of replacing the colour.
+    final fill = worked
+        ? Color(colors.first)
+        : (selected ? scheme.primary : null);
+    final foreground = worked
+        ? Colors.white
+        : (selected ? scheme.onPrimary : scheme.onSurface);
 
-    final Border? border = today
-        ? Border.all(color: scheme.secondary, width: 2)
-        : null;
+    // Gold ring = today, turquoise ring = selected; today + selected is thicker.
+    Color? ringColor;
+    var ringWidth = 2.0;
+    if (selected && today) {
+      ringColor = scheme.secondary;
+      ringWidth = 3;
+    } else if (selected) {
+      ringColor = scheme.primary;
+      ringWidth = 2.5;
+    } else if (today) {
+      ringColor = scheme.secondary;
+    }
+    final Border? border = ringColor == null
+        ? null
+        : Border.all(color: ringColor, width: ringWidth);
 
     return Semantics(
       label: '${toPersianDigits(j.day)} ${jalaliMonthNames[j.month - 1]}'

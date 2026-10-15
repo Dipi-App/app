@@ -43,7 +43,7 @@ flutter build apk --debug
 ```
 lib/
   app.dart                     MaterialApp: locale fa, RTL, themes, AppGate
-  main.dart                    ProviderScope + runApp
+  main.dart                    ProviderScope + runApp + auto-backup scheduler
   core/
     constants/app_info.dart    name, tagline, version, backup file names
     providers/                 database + DAO providers
@@ -53,8 +53,12 @@ lib/
   domain/enums.dart            WageType, PaymentType, ThemeChoice, SettlementState
   features/<feature>/
     domain/ presentation/ state/
+  features/app_update/         GitHub release check, download, install
+  features/backup/             JSON backup/restore, auto backup, local backup
   presentation/                home shell, app gate
   shared/                      widgets + motion helper + branding (DipiMark)
+packages/
+  dipi_documents/              local plugin: MediaStore writes to Documents/dipi
 assets/
   fonts/                       Vazirmatn (bundled, no network)
   branding/                    D-mark logo, app icon + splash sources
@@ -72,8 +76,10 @@ never edit by hand. `flutter_launcher_icons` and `flutter_native_splash` output
   only in the UI.
 - Money is stored as **integer Rial** (canonical unit). Display/entry uses the
   selected unit: `toman` (= 10 rial) or `rial`. Never use `double` for money.
-- No network calls except the Google Drive backup (`drive.appdata` scope).
+- No network calls except the GitHub release check in `features/app_update`.
 - Business logic (balance, stats) lives in pure Dart classes, not widgets.
+- Backup files are plain JSON; the automatic file shape is
+  `{ schemaVersion, appVersion, createdAt, data }` (see `BackupDocument`).
 
 ## Application id
 
@@ -87,43 +93,23 @@ namespace stays `com.yourname.dipi` so no source file has to move.
 3. Payments + balance + settlement view — done.
 4. Stats and charts — done.
 5. Local JSON backup/import, export txt/md/docx — done.
-6. Google Drive backup — done (needs the Google Cloud setup below).
-7. Animation polish, app lock, tests — done.
+6. Automatic local backup (12h, Documents/dipi) — done.
+7. In-app auto-update from GitHub releases — done.
+8. Animation polish, app lock, tests — done.
 
-## Google Drive backup
+## Backup
 
-The Drive client is written; it stays disabled until you create an OAuth client.
-Do this once, by hand, in https://console.cloud.google.com:
-
-1. Create (or pick) a project.
-2. APIs & Services → Library → enable **Google Drive API**.
-3. APIs & Services → OAuth consent screen: type *External*, fill the form, add
-   the scope `.../auth/drive.appdata` only, and add your own Google account under
-   *Test users* (Testing mode is enough for personal use).
-4. APIs & Services → Credentials → create **two** OAuth client ids:
-   * **Android** — package name = `dipiAppId` from `android/gradle.properties`,
-     plus the SHA-1 of your signing key.
-   * **Web application** — no redirect URI needed.
-5. Get the debug SHA-1:
-
-   ```bash
-   keytool -list -v -keystore ~/.android/debug.keystore \
-     -alias androiddebugkey -storepass android -keypass android
-   ```
-
-6. Build the app with the **Web** client id (never the Android one):
-
-   ```bash
-   flutter build apk --dart-define=DIPI_GOOGLE_SERVER_CLIENT_ID=XXXX.apps.googleusercontent.com
-   ```
-
-Without the define, `AppInfo.googleBackupConfigured` is false and the Drive
-section shows the setup guide instead of a sign-in button. Nothing else in the
-app needs the network.
-
-The Drive code talks to the Drive REST API (`drive/v3/files` with
-`spaces=appDataFolder` / `uploadType=media`) over the OAuth token from
-`google_sign_in` — no `googleapis` dependency needed.
+- **Manual**: JSON export/import from Settings → پشتیبان‌گیری, plus
+  txt/md/docx export from the export screen.
+- **Automatic**: a `workmanager` periodic task runs every 12 hours and also on
+  app start when the last backup is over 12 hours old
+  (`features/backup/data/auto_backup_scheduler.dart`). It writes
+  `Documents/dipi/dipi_backup_YYYYMMDD_HHmm.json` through the local
+  `dipi_documents` plugin (Android `MediaStore`, no permission, API 29+),
+  keeps the last 14 files, and records the time in `app_settings.lastBackupAt`.
+- Files are written to a temp file first and published with MediaStore
+  `IS_PENDING`, so a half-written file is never visible.
+- `android:allowBackup="false"` keeps the OS from uploading app data.
 
 ## App lock
 
@@ -132,8 +118,6 @@ The Drive code talks to the Drive REST API (`drive/v3/files` with
 * The lock screen accepts 4–8 digits, auto-submits at the stored length, shakes
   on a wrong PIN and offers biometrics when the device has an enrolled one.
 * `AppGate` locks again when the app goes to `paused`/`hidden`.
-* Auto Drive backup runs once per app start when the toggle is on and the last
-  backup is over a day old — it is best-effort and swallows its errors.
 
 ## Testing notes
 
