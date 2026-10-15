@@ -171,13 +171,15 @@ jobs:
         run: flutter build apk --release
 
       - name: Name the APKs clearly
-        # Stable universal name `dipi-<version>.apk`, plus one file per ABI.
+        # Stable universal names: `dipi.apk` (the fixed download URL the website
+        # links to) and `dipi-<version>.apk`, plus one file per ABI.
         if: ${{ steps.version.outputs.released == 'true' || steps.mainversion.outputs.released == 'true' }}
         env:
           VERSION: ${{ steps.version.outputs.version || steps.mainversion.outputs.version }}
         run: |
           out=build/app/outputs/flutter-apk
           mkdir -p dist
+          cp "$out/app-release.apk" "dist/dipi.apk"
           cp "$out/app-release.apk" "dist/dipi-${VERSION}.apk"
           for abi in arm64-v8a armeabi-v7a x86_64; do
             src="$out/app-${abi}-release.apk"
