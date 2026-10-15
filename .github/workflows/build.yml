@@ -1,13 +1,17 @@
 name: Build & Release
 
-# Runs on every push to main, and can be triggered by hand from the Actions tab.
+# Releases are cut by pushing a version tag, e.g. `git tag v1.2.3 && git push origin v1.2.3`.
+# Pushing to `main` still runs the analyzer/tests and can auto-bump + tag + release
+# using Conventional Commits. A manual run is available from the Actions tab.
 on:
   push:
     branches: [main]
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
     inputs:
       bump:
-        description: Version bump
+        description: Version bump (used for main-branch runs)
         type: choice
         options: [auto, patch, minor, major]
         default: auto
@@ -24,7 +28,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     # A "[skip ci]" release commit must not start another run (avoids a loop).
-    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]') }}
+    # Tag pushes always run.
+    if: ${{ github.ref_type == 'tag' || github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,19 +49,49 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Bump version from Conventional Commits
+      # ---------------------------------------------------------------------
+      # Work out which version/tag this run is for.
+      # ---------------------------------------------------------------------
+
+      - name: Resolve version from the pushed tag
         id: version
+        if: ${{ github.ref_type == 'tag' }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          public=$(grep -E '^version:' pubspec.yaml | head -1 | awk '{print $2}')
+          public="${public%%+*}"
+          if [ "$public" != "$version" ]; then
+            echo "::error::pubspec.yaml version is $public but the tag is $tag. Bump pubspec first."
+            exit 1
+          fi
+          echo "released=true" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Releasing $tag (from an existing tag)."
+
+      - name: Bump version from Conventional Commits
+        id: bump
+        if: ${{ github.ref_type != 'tag' }}
         env:
           FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
         run: |
           chmod +x scripts/bump_version.sh
           scripts/bump_version.sh "${{ github.event.inputs.bump || 'auto' }}"
 
+      - name: Use the bump result on main-branch runs
+        if: ${{ github.ref_type != 'tag' }}
+        run: |
+          echo "released=${{ steps.bump.outputs.released }}" >> "$GITHUB_OUTPUT"
+          echo "version=${{ steps.bump.outputs.version }}" >> "$GITHUB_OUTPUT"
+          echo "tag=${{ steps.bump.outputs.tag }}" >> "$GITHUB_OUTPUT"
+        id: mainversion
+
       - name: Verify build number increased
         # Every release needs a versionCode higher than the last one, or Android
         # would refuse the in-app update. The bump script increments it; this
         # guard fails loudly if that ever stops happening.
-        if: steps.version.outputs.released == 'true'
+        if: ${{ github.ref_type != 'tag' && steps.bump.outputs.released == 'true' }}
         run: |
           new_full=$(grep -E '^version:' pubspec.yaml | head -1 | awk '{print $2}')
           new_build="${new_full##*+}"
@@ -75,15 +110,19 @@ jobs:
           echo "Build number $prev_build -> $new_build"
 
       - name: Commit and tag the release
-        if: steps.version.outputs.released == 'true'
+        if: ${{ github.ref_type != 'tag' && steps.bump.outputs.released == 'true' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add pubspec.yaml CHANGELOG.md
-          git commit -m "chore(release): ${{ steps.version.outputs.tag }} [skip ci]"
-          git tag "${{ steps.version.outputs.tag }}"
+          git commit -m "chore(release): ${{ steps.bump.outputs.tag }} [skip ci]"
+          git tag "${{ steps.bump.outputs.tag }}"
           git push origin "HEAD:${{ github.ref_name }}"
-          git push origin "${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.bump.outputs.tag }}"
+
+      # ---------------------------------------------------------------------
+      # Build, verify and release.
+      # ---------------------------------------------------------------------
 
       - name: Install dependencies
         run: flutter pub get
@@ -99,10 +138,10 @@ jobs:
         # CI falls back to Flutter's default NDK, which the runner installs.
         run: sed -i 's/^dipiNdkVersion=.*/dipiNdkVersion=/' android/gradle.properties
 
-      - name: Configure release signing
+      - name: Decode the release keystore
         # A shared keystore is mandatory: Android only updates an app when the
         # new APK is signed with the same key as the installed one.
-        if: steps.version.outputs.released == 'true'
+        if: ${{ steps.version.outputs.released == 'true' || steps.mainversion.outputs.released == 'true' }}
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
@@ -111,39 +150,73 @@ jobs:
             exit 1
           fi
           echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
-          cat > android/key.properties <<EOF
-          storeFile=upload-keystore.jks
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          EOF
-          echo "Release keystore configured."
+          echo "Release keystore decoded."
 
       - name: Build split-per-ABI release APKs
-        if: steps.version.outputs.released == 'true'
+        if: ${{ steps.version.outputs.released == 'true' || steps.mainversion.outputs.released == 'true' }}
+        env:
+          DIPI_KEYSTORE_FILE: upload-keystore.jks
+          DIPI_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          DIPI_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          DIPI_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: flutter build apk --release --split-per-abi
 
       - name: Build universal release APK
-        if: steps.version.outputs.released == 'true'
+        if: ${{ steps.version.outputs.released == 'true' || steps.mainversion.outputs.released == 'true' }}
+        env:
+          DIPI_KEYSTORE_FILE: upload-keystore.jks
+          DIPI_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          DIPI_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          DIPI_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: flutter build apk --release
 
       - name: Name the APKs clearly
-        if: steps.version.outputs.released == 'true'
+        # Stable universal name `dipi-<version>.apk`, plus one file per ABI.
+        if: ${{ steps.version.outputs.released == 'true' || steps.mainversion.outputs.released == 'true' }}
+        env:
+          VERSION: ${{ steps.version.outputs.version || steps.mainversion.outputs.version }}
         run: |
-          v="${{ steps.version.outputs.version }}"
           out=build/app/outputs/flutter-apk
           mkdir -p dist
-          cp "$out/app-release.apk" "dist/dipi-v${v}-universal.apk"
+          cp "$out/app-release.apk" "dist/dipi-${VERSION}.apk"
           for abi in arm64-v8a armeabi-v7a x86_64; do
             src="$out/app-${abi}-release.apk"
-            [ -f "$src" ] && cp "$src" "dist/dipi-v${v}-${abi}.apk"
+            [ -f "$src" ] && cp "$src" "dist/dipi-${VERSION}-${abi}.apk"
           done
           ls -l dist
 
+      - name: Verify the APKs are signed with the release key
+        # Fail the build if anything came out signed with the Android Debug key.
+        if: ${{ steps.version.outputs.released == 'true' || steps.mainversion.outputs.released == 'true' }}
+        run: |
+          sdk="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          apksigner="$(ls -1 "$sdk"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1 || true)"
+          if [ -z "$apksigner" ]; then
+            echo "::error::apksigner was not found under $sdk/build-tools."
+            exit 1
+          fi
+          echo "Using $apksigner"
+          for f in dist/*.apk; do
+            echo "::group::apksigner verify $f"
+            certs="$("$apksigner" verify --verbose --print-certs "$f")"
+            echo "$certs"
+            echo "::endgroup::"
+            if echo "$certs" | grep -qi "Android Debug"; then
+              echo "::error::$f is signed with the Android Debug key. Refusing to release."
+              exit 1
+            fi
+            if ! echo "$certs" | grep -q "Verified using v2 scheme.* true"; then
+              echo "::error::$f is missing a v2 signature."
+              exit 1
+            fi
+            if ! echo "$certs" | grep -q "Verified using v3 scheme.* true"; then
+              echo "::warning::$f has no v3 signature."
+            fi
+          done
+          echo "All APKs are signed with the release key."
+
       - name: Compute SHA-256 checksums
-        # One `<hash>  <filename>` file per APK. The app verifies the download
-        # against these before it will install anything.
-        if: steps.version.outputs.released == 'true'
+        if: ${{ steps.version.outputs.released == 'true' || steps.mainversion.outputs.released == 'true' }}
         run: |
           cd dist
           for f in *.apk; do
@@ -153,33 +226,50 @@ jobs:
 
       - name: Prepare release notes
         # The newest CHANGELOG section (its first block), built from Conventional
-        # Commits by scripts/bump_version.sh.
-        if: steps.version.outputs.released == 'true'
+        # Commits by scripts/bump_version.sh, plus the SHA-256 list and a link to
+        # the install guide.
+        if: ${{ steps.version.outputs.released == 'true' || steps.mainversion.outputs.released == 'true' }}
+        env:
+          TAG: ${{ steps.version.outputs.tag || steps.mainversion.outputs.tag }}
         run: |
-          awk 'NR==1{print; next} /^#/{exit} {print}' CHANGELOG.md > release-notes.md
+          if [ -f CHANGELOG.md ]; then
+            awk 'NR==1{print; next} /^#/{exit} {print}' CHANGELOG.md > release-notes.md
+          fi
           if [ ! -s release-notes.md ]; then
             git log -1 --pretty=format:'%s' > release-notes.md
           fi
+          {
+            echo
+            echo "### SHA-256"
+            echo
+            echo '```'
+            cat dist/*.sha256
+            echo '```'
+            echo
+            echo "> راهنمای نصب گام‌به‌گام: [docs/INSTALL.fa.md](https://github.com/${GITHUB_REPOSITORY}/blob/${TAG}/docs/INSTALL.fa.md)"
+          } >> release-notes.md
           echo "----- release-notes.md -----"
           cat release-notes.md
 
       - name: Upload APKs as workflow artifacts
-        if: steps.version.outputs.released == 'true'
+        if: ${{ steps.version.outputs.released == 'true' || steps.mainversion.outputs.released == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: dipi-v${{ steps.version.outputs.version }}
+          name: dipi-${{ steps.version.outputs.version || steps.mainversion.outputs.version }}
           path: |
             dist/*.apk
             dist/*.sha256
           if-no-files-found: error
 
       - name: Create GitHub Release with the APKs and checksums
-        if: steps.version.outputs.released == 'true'
+        if: ${{ steps.version.outputs.released == 'true' || steps.mainversion.outputs.released == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag || steps.mainversion.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version || steps.mainversion.outputs.version }}
         run: |
-          gh release create "${{ steps.version.outputs.tag }}" \
+          gh release create "$TAG" \
             dist/*.apk \
             dist/*.sha256 \
-            --title "دیپی ${{ steps.version.outputs.version }}" \
+            --title "دیپی ${VERSION}" \
             --notes-file release-notes.md

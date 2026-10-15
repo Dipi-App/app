@@ -36,8 +36,22 @@ base64 -w0 dipi-release.jks
 
 ### اگر خواستی دستی منتشر کنی
 
-از تب Actions روی «Build & Release» بزن، «Run workflow» را انتخاب کن و نوع
-بالا رفتن نسخه را بگو (`auto`، `patch`، `minor` یا `major`).
+دو راه داری:
+
+**راه تگ (پیشنهادی):** یک تگ نسخه بزن و آن را push کن. شماره‌ی نسخه در
+`pubspec.yaml` باید با تگ یکی باشد.
+
+```bash
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+**راه تب Actions:** از تب Actions روی «Build & Release» بزن، «Run workflow» را
+انتخاب کن و نوع بالا رفتن نسخه را بگو (`auto`، `patch`، `minor` یا `major`).
+این راه خودش نسخه را بالا می‌برد و تگ می‌زند.
+
+راهنمای نصب برای کاربران در [`INSTALL.fa.md`](INSTALL.fa.md) است و در متن هر
+Release هم لینک می‌شود.
 
 ### اگر ربات کار نکرد
 
@@ -50,31 +64,38 @@ base64 -w0 dipi-release.jks
 
 ## In English
 
-Releases are automated. Push to `main` with Conventional Commit messages:
-
-- `feat: …` → minor bump (1.1.0 → 1.2.0)
-- `fix: …` → patch bump (1.2.0 → 1.2.1)
-- `feat!: …` / `BREAKING CHANGE` → major bump (1.2.1 → 2.0.0)
-- `chore:` / `docs:` / … only → no release
-
-The **Build & Release** workflow then analyzes, tests, bumps `pubspec.yaml`,
-writes `CHANGELOG.md`, tags `vX.Y.Z`, builds `--split-per-abi` + universal APKs,
-uploads them as artifacts and creates a GitHub Release with generated notes.
+Releases are cut by pushing a version tag (`vX.Y.Z`); pushing to `main` still
+auto-bumps from Conventional Commits and tags for you.
 
 1. **Create the signing keystore once** (commands above) and add the four
-   secrets. Never commit the `.jks` or the passwords.
-2. **Manual run:** Actions → *Build & Release* → *Run workflow*, choosing the
-   bump (`auto`/`patch`/`minor`/`major`). Manual runs always release.
-3. **Build number** always increments on every release because Android needs a
+   secrets (`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`,
+   `KEY_PASSWORD`). Never commit the `.jks` or the passwords.
+2. **Tag release:** `git tag v1.2.3 && git push origin v1.2.3`. The version in
+   `pubspec.yaml` must match the tag. The workflow validates this.
+3. **Auto/manual release:** `main` runs bump `pubspec.yaml`, write `CHANGELOG.md`
+   and tag `vX.Y.Z` from Conventional Commits. A manual run from the Actions tab
+   also always releases.
+4. The workflow builds `--split-per-abi` + universal APKs, **verifies every APK
+   with `apksigner verify --print-certs` and fails if any is signed with the
+   Android Debug key**, writes `<apk>.sha256` files, and creates the release with
+   the checksums in the notes.
+5. **Build number** always increments on every release because Android needs a
    fresh `versionCode`.
-4. **No CI loop:** the version commit message ends with `[skip ci]`, and the job
-   ignores commits containing that marker.
+6. **No CI loop:** the version commit message ends with `[skip ci]`, and the job
+   ignores commits containing that marker. Tags pushed by the workflow's own
+   `GITHUB_TOKEN` do not re-trigger the workflow.
+
+Users install from [`INSTALL.fa.md`](INSTALL.fa.md); the release notes link to it.
 
 ### Installing a release locally
 
+Release builds are **never** signed with the debug key: without a keystore the
+build fails. Configure `android/key.properties` (git-ignored) or the
+`DIPI_*` environment variables first.
+
 ```bash
-flutter build apk --release            # uses debug keys when key.properties is absent
 flutter build apk --release --split-per-abi
+flutter build apk --release            # universal APK
 ```
 
 Outputs: `build/app/outputs/flutter-apk/app-release.apk` (universal) and

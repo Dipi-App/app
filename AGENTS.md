@@ -53,7 +53,7 @@ lib/
   domain/enums.dart            WageType, PaymentType, ThemeChoice, SettlementState
   features/<feature>/
     domain/ presentation/ state/
-  features/app_update/         GitHub release check, download, install
+  features/app_update/         GitHub release check (opens download in browser)
   features/backup/             JSON backup/restore, auto backup, local backup
   presentation/                home shell, app gate
   shared/                      widgets + motion helper + branding (DipiMark)
@@ -76,10 +76,19 @@ never edit by hand. `flutter_launcher_icons` and `flutter_native_splash` output
   only in the UI.
 - Money is stored as **integer Rial** (canonical unit). Display/entry uses the
   selected unit: `toman` (= 10 rial) or `rial`. Never use `double` for money.
-- No network calls except the GitHub release check in `features/app_update`.
+- No network calls except the GitHub release check in `features/app_update`
+  (which only opens the download page in the browser — no auto-install, no
+  `REQUEST_INSTALL_PACKAGES`).
 - Business logic (balance, stats) lives in pure Dart classes, not widgets.
 - Backup files are plain JSON; the automatic file shape is
   `{ schemaVersion, appVersion, createdAt, data }` (see `BackupDocument`).
+
+## Release signing
+
+Release builds are **never** signed with the debug key: without a keystore the
+build fails (`android/app/build.gradle.kts`). Signing comes from `DIPI_*`
+environment variables (CI) or `android/key.properties` (local, git-ignored).
+Releases are tag-triggered; see `docs/RELEASE.md` and `docs/INSTALL.fa.md`.
 
 ## Application id
 
@@ -94,7 +103,8 @@ namespace stays `com.yourname.dipi` so no source file has to move.
 4. Stats and charts — done.
 5. Local JSON backup/import, export txt/md/docx — done.
 6. Automatic local backup (12h, Documents/dipi) — done.
-7. In-app auto-update from GitHub releases — done.
+7. In-app update check (GitHub releases) — opens the APK link in the browser; no
+   auto-install, no extra permissions. Releases are tag-triggered (`vX.Y.Z`).
 8. Animation polish, app lock, tests — done.
 
 ## Backup
