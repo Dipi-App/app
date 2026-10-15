@@ -1,9 +1,3 @@
-## 1.5.0 — 2026-10-15
-
-- Open-source release: MIT license, English and Persian READMEs, contributing guide, security policy and code of conduct.
-- Issue templates (bug report and feature request) and a pull request template, in Persian and English.
-- Each release now also publishes a universal `dipi.apk` and its `dipi.apk.sha256` checksum in the release notes.
-
 ## 1.4.0 — 2026-10-15
 
 - ci(release): tag-triggered signed builds with signature verification
