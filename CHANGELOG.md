@@ -1,3 +1,8 @@
+## 1.3.0 — 2026-10-15
+
+- feat: automatic local backups, drop Google Drive, calendar UI fixes
+- chore: extract the right CHANGELOG section for release notes
+
 ## 1.2.1 — 2026-10-15
 
 - fix: make the update downloader dispose-safe and its tests deterministic
