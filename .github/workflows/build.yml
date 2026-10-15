@@ -152,11 +152,11 @@ jobs:
           cat *.sha256
 
       - name: Prepare release notes
-        # The newest CHANGELOG section, built from Conventional Commits by
-        # scripts/bump_version.sh.
+        # The newest CHANGELOG section (its first block), built from Conventional
+        # Commits by scripts/bump_version.sh.
         if: steps.version.outputs.released == 'true'
         run: |
-          awk '/^# /{c++} c==1' CHANGELOG.md > release-notes.md
+          awk 'NR==1{print; next} /^#/{exit} {print}' CHANGELOG.md > release-notes.md
           if [ ! -s release-notes.md ]; then
             git log -1 --pretty=format:'%s' > release-notes.md
           fi
