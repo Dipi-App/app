@@ -1,3 +1,7 @@
+## 1.2.0 — 2026-10-15
+
+- feat: in-app auto-update from GitHub releases
+
 ## 1.1.0 — 2026-10-15
 
 - feat: floating nav, Material 3 theme, onboarding/help, CI/CD and versioning
