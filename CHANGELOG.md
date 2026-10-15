@@ -1,3 +1,9 @@
+## 1.1.0 — 2026-10-15
+
+- feat: floating nav, Material 3 theme, onboarding/help, CI/CD and versioning
+- Add stats, backup/export, Drive backup and app lock
+- Add Dipi: offline Persian workday and payment ledger
+
 # Changelog
 
 All notable changes to Dipi are listed here. The format follows
