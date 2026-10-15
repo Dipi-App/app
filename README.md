@@ -16,31 +16,39 @@
 </p>
 
 ۱. روی دکمه **دانلود** بالا بزن. صفحه‌ی Releases باز می‌شود و همیشه فایل‌های
-   **آخرین نسخه** آنجا هستند (هر نسخه با شماره‌ی خودش).
-۲. **کدام فایل؟** برای بیشتر گوشی‌ها فایل `universal` را بردار؛ روی همه‌ی
-   گوشی‌ها نصب می‌شود. اگر فایل سبک‌تر می‌خواهی، `arm64-v8a` برای تقریباً همه‌ی
-   گوشی‌های جدید مناسب است.
+   **آخرین نسخه** آنجا هستند.
+۲. **کدام فایل؟** برای بیشتر گوشی‌ها فایل `dipi-<نسخه>.apk` را بردار؛ روی همه‌ی
+   گوشی‌ها نصب می‌شود. اگر فایل سبک‌تر می‌خواهی، `dipi-<نسخه>-arm64-v8a.apk`
+   برای تقریباً همه‌ی گوشی‌های جدید مناسب است.
 ۳. فایل دانلود‌شده را در گوشی باز کن.
-۴. اگر گوشی پیام داد، اجازه‌ی **نصب از منابع ناشناس** را برای برنامه‌ی
-   فایل‌ها روشن کن (گوشی‌های جدید معمولاً خودشان راهنمایی می‌کنند).
-۵. «نصب» را بزن. تمام! دیپی بدون اینترنت کار می‌کند.
+۴. اگر گوشی پیام داد، اجازه‌ی **نصب از این منبع** را روشن کن (گوشی‌های جدید
+   معمولاً خودشان راهنمایی می‌کنند).
+۵. اگر Play Protect هشدار داد، **More details** و بعد **Install anyway** را بزن.
+۶. «نصب» را بزن. تمام! دیپی بدون اینترنت کار می‌کند.
 
-> روی صفحه‌ی Releases نام فایل‌ها با شماره‌ی نسخه عوض می‌شود؛ فقط آخرین نسخه را
-> بردار. هیچ لینکی به یک نام فایل ثابت داده نشده، چون با هر نسخه عوض می‌شود.
+> راهنمای گام‌به‌گام با تصویر کلامی، بررسی SHA-256 و روش «More details /
+> Install anyway» در [`docs/INSTALL.fa.md`](docs/INSTALL.fa.md) آمده است.
 
 ## Download & install (English)
 
 1. Tap the **Download** button above; the Releases page always holds the
-   **latest** files (each version is named after its number).
-2. **Which file?** Take the `universal` APK — it installs on any phone. Want a
-   smaller file? `arm64-v8a` fits almost every modern phone.
+   **latest** files.
+2. **Which file?** Take `dipi-<version>.apk` — it installs on any phone. Want a
+   smaller file? `dipi-<version>-arm64-v8a.apk` fits almost every modern phone.
 3. Open the downloaded file on the phone.
-4. If Android asks, allow **installing from unknown sources** for your file
-   manager (newer Android shows a one-tap guide).
-5. Tap **Install**. Done — Dipi works with no internet connection.
+4. If Android asks, allow **installing from this source** for your file manager
+   (newer Android shows a one-tap guide).
+5. If Play Protect warns, tap **More details → Install anyway**. It is normal for
+   any app installed outside Play.
+6. Tap **Install**. Done — Dipi works with no internet connection.
 
-There is no link to a fixed file name on purpose: the APK name changes with
-every version, so always download the newest one from the Releases page.
+The step-by-step guide (including how to check the SHA-256 and the exact
+"More details / Install anyway" wording) lives in
+[`docs/INSTALL.fa.md`](docs/INSTALL.fa.md).
+
+Dipi never installs packages itself: when a newer version exists it only shows a
+message and a button that opens this page in your browser. Each release also
+publishes `<file>.apk.sha256` so the download can be verified.
 
 ## Features
 

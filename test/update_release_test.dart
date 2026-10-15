@@ -1,7 +1,7 @@
-import 'package:dipi/features/app_update/domain/abi_matcher.dart';
 import 'package:dipi/features/app_update/domain/app_release.dart';
 import 'package:dipi/features/app_update/domain/release_asset.dart';
 import 'package:dipi/features/app_update/domain/semantic_version.dart';
+import 'package:dipi/features/app_update/domain/update_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 ReleaseAsset _apk(String name, {int size = 100}) => ReleaseAsset(
@@ -14,82 +14,81 @@ AppRelease _release({List<ReleaseAsset>? extra}) => AppRelease(
   tag: 'v1.2.0',
   version: const SemanticVersion(1, 2, 0),
   body: 'notes',
+  htmlUrl: 'https://github.com/mst-ghi/dipi/releases/tag/v1.2.0',
   assets: [
-    _apk('dipi-v1.2.0-arm64-v8a.apk', size: 30),
-    _apk('dipi-v1.2.0-armeabi-v7a.apk', size: 25),
-    _apk('dipi-v1.2.0-x86_64.apk', size: 28),
-    _apk('dipi-v1.2.0-universal.apk', size: 60),
+    _apk('dipi-1.2.0-arm64-v8a.apk', size: 30),
+    _apk('dipi-1.2.0-armeabi-v7a.apk', size: 25),
+    _apk('dipi-1.2.0-x86_64.apk', size: 28),
+    _apk('dipi-1.2.0.apk', size: 60),
     ...?extra,
   ],
 );
 
 void main() {
-  group('pickApkForAbis', () {
-    test('picks the exact ABI', () {
-      final picked = pickApkForAbis(_release(), ['arm64-v8a', 'armeabi-v7a']);
-      expect(picked?.name, 'dipi-v1.2.0-arm64-v8a.apk');
+  group('bestApk', () {
+    test('prefers the stable universal name dipi-<version>.apk', () {
+      expect(_release().bestApk?.name, 'dipi-1.2.0.apk');
     });
 
-    test('falls back to the next supported ABI', () {
-      final picked = pickApkForAbis(_release(), ['armeabi-v7a']);
-      expect(picked?.name, 'dipi-v1.2.0-armeabi-v7a.apk');
-    });
-
-    test('uses the universal APK when no ABI matches', () {
-      final picked = pickApkForAbis(_release(), ['mips']);
-      expect(picked?.name, 'dipi-v1.2.0-universal.apk');
-    });
-
-    test('uses the universal APK when the ABI list is empty', () {
-      final picked = pickApkForAbis(_release(), const []);
-      expect(picked?.name, 'dipi-v1.2.0-universal.apk');
-    });
-
-    test('uses a lone APK when the release has only one', () {
+    test('accepts the legacy -universal.apk name', () {
       final release = AppRelease(
         tag: 'v1.2.0',
         version: const SemanticVersion(1, 2, 0),
         body: '',
-        assets: [_apk('dipi-v1.2.0-arm64-v8a.apk')],
-      );
-      final picked = pickApkForAbis(release, ['mips']);
-      expect(picked?.name, 'dipi-v1.2.0-arm64-v8a.apk');
-    });
-
-    test('cannot guess with several ABIs and no universal APK', () {
-      final release = _release().copyWithoutUniversal();
-      expect(pickApkForAbis(release, ['mips']), isNull);
-    });
-  });
-
-  group('checksumFor', () {
-    test('finds the matching .sha256 asset', () {
-      final release = _release(
-        extra: [
-          const ReleaseAsset(
-            name: 'dipi-v1.2.0-arm64-v8a.apk.sha256',
-            sizeInBytes: 80,
-            downloadUrl: 'https://github.com/x/y.sha256',
-          ),
+        assets: [
+          _apk('dipi-1.2.0-arm64-v8a.apk'),
+          _apk('dipi-1.2.0-universal.apk'),
         ],
       );
-      final apk = release.apks.firstWhere((a) => a.name.contains('arm64'));
-      expect(release.checksumFor(apk)?.name, 'dipi-v1.2.0-arm64-v8a.apk.sha256');
+      expect(release.bestApk?.name, 'dipi-1.2.0-universal.apk');
     });
 
-    test('returns null when no checksum is published', () {
-      final release = _release();
-      expect(release.checksumFor(release.apks.first), isNull);
+    test('falls back to any APK when there is no universal one', () {
+      final release = AppRelease(
+        tag: 'v1.2.0',
+        version: const SemanticVersion(1, 2, 0),
+        body: '',
+        assets: [_apk('dipi-1.2.0-arm64-v8a.apk')],
+      );
+      expect(release.bestApk?.name, 'dipi-1.2.0-arm64-v8a.apk');
     });
   });
 
-  test('AppRelease.fromJson reads tag, body and assets', () {
+  group('downloadUrl', () {
+    test('is the chosen APK download link', () {
+      expect(_release().downloadUrl, contains('dipi-1.2.0.apk'));
+    });
+
+    test('falls back to the release page when there is no APK', () {
+      const release = AppRelease(
+        tag: 'v1.2.0',
+        version: SemanticVersion(1, 2, 0),
+        body: '',
+        htmlUrl: 'https://github.com/mst-ghi/dipi/releases/tag/v1.2.0',
+        assets: [],
+      );
+      expect(release.downloadUrl, 'https://github.com/mst-ghi/dipi/releases/tag/v1.2.0');
+    });
+
+    test('falls back to the latest releases page when nothing is available', () {
+      const release = AppRelease(
+        tag: 'v1.2.0',
+        version: SemanticVersion(1, 2, 0),
+        body: '',
+        assets: [],
+      );
+      expect(release.downloadUrl, UpdateConfig.releasesPageUrl);
+    });
+  });
+
+  test('AppRelease.fromJson reads tag, body, html_url and assets', () {
     final release = AppRelease.fromJson({
       'tag_name': 'v3.1.4',
       'body': 'fixed things',
+      'html_url': 'https://github.com/mst-ghi/dipi/releases/tag/v3.1.4',
       'assets': [
         {
-          'name': 'dipi-v3.1.4-universal.apk',
+          'name': 'dipi-3.1.4.apk',
           'size': 123,
           'browser_download_url': 'https://github.com/a/b.apk',
         },
@@ -97,15 +96,8 @@ void main() {
     });
     expect(release.version, const SemanticVersion(3, 1, 4));
     expect(release.body, 'fixed things');
-    expect(release.apks.single.name, 'dipi-v3.1.4-universal.apk');
+    expect(release.htmlUrl, contains('v3.1.4'));
+    expect(release.apks.single.name, 'dipi-3.1.4.apk');
+    expect(release.downloadUrl, 'https://github.com/a/b.apk');
   });
-}
-
-extension on AppRelease {
-  AppRelease copyWithoutUniversal() => AppRelease(
-    tag: tag,
-    version: version,
-    body: body,
-    assets: assets.where((a) => !a.name.contains('universal')).toList(),
-  );
 }

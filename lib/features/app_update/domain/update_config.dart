@@ -9,11 +9,16 @@ abstract final class UpdateConfig {
   static const String latestReleaseApi =
       'https://api.github.com/repos/$githubOwner/$githubRepo/releases/latest';
 
-  /// At most one automatic check in this window. A manual check ignores it.
-  static const Duration checkInterval = Duration(hours: 6);
+  /// The Releases page, used when a download link cannot be resolved.
+  static const String releasesPageUrl =
+      'https://github.com/$githubOwner/$githubRepo/releases/latest';
 
-  /// Only these hosts may serve the APK and its checksum.
-  static const Set<String> allowedDownloadHosts = {
+  /// Automatic checks run at most once in this window. A manual check ignores it.
+  static const Duration checkInterval = Duration(hours: 24);
+
+  /// Only these hosts may be opened in the browser, so a compromised API
+  /// response can never redirect the user somewhere unexpected.
+  static const Set<String> allowedLinkHosts = {
     'github.com',
     'www.github.com',
     'objects.githubusercontent.com',
@@ -21,11 +26,6 @@ abstract final class UpdateConfig {
     'release-assets.githubusercontent.com',
   };
 
-  /// The APK names the release workflow produces: `dipi-v1.2.0-<abi>.apk`
-  /// and `dipi-v1.2.0-universal.apk`.
-  static const String apkPrefix = 'dipi-';
-  static const String universalAbi = 'universal';
-
-  static bool isAllowedDownloadUrl(Uri url) =>
-      url.scheme == 'https' && allowedDownloadHosts.contains(url.host);
+  static bool isAllowedLinkUrl(Uri url) =>
+      url.scheme == 'https' && allowedLinkHosts.contains(url.host);
 }

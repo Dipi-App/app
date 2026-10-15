@@ -15,7 +15,6 @@ class AppSettings {
     this.onboardingSeen = false,
     this.voiceHintsEnabled = true,
     this.coachMarksSeen = const {},
-    this.autoUpdateWifiOnly = true,
     this.lastUpdateCheckAt,
   });
 
@@ -40,10 +39,7 @@ class AppSettings {
   /// Ids of the one-time coach-mark tips the user has already seen.
   final Set<String> coachMarksSeen;
 
-  /// Whether a new-version APK may auto-download on Wi-Fi only (default on).
-  final bool autoUpdateWifiOnly;
-
-  /// ISO time of the last successful update check, for the 6-hour limit.
+  /// ISO time of the last successful update check, for the 24-hour limit.
   final String? lastUpdateCheckAt;
 
   DateTime? get lastUpdateCheckDate => lastUpdateCheckAt == null
@@ -69,7 +65,6 @@ class AppSettings {
     bool? onboardingSeen,
     bool? voiceHintsEnabled,
     Set<String>? coachMarksSeen,
-    bool? autoUpdateWifiOnly,
     String? lastUpdateCheckAt,
   }) {
     return AppSettings(
@@ -87,7 +82,6 @@ class AppSettings {
       onboardingSeen: onboardingSeen ?? this.onboardingSeen,
       voiceHintsEnabled: voiceHintsEnabled ?? this.voiceHintsEnabled,
       coachMarksSeen: coachMarksSeen ?? this.coachMarksSeen,
-      autoUpdateWifiOnly: autoUpdateWifiOnly ?? this.autoUpdateWifiOnly,
       lastUpdateCheckAt: lastUpdateCheckAt ?? this.lastUpdateCheckAt,
     );
   }
@@ -105,7 +99,6 @@ class AppSettings {
     'onboardingSeen': onboardingSeen.toString(),
     'voiceHintsEnabled': voiceHintsEnabled.toString(),
     'coachMarksSeen': coachMarksSeen.join(','),
-    'autoUpdateWifiOnly': autoUpdateWifiOnly.toString(),
     'lastUpdateCheckAt': lastUpdateCheckAt ?? '',
   };
 
@@ -131,7 +124,6 @@ class AppSettings {
           .split(',')
           .where((id) => id.isNotEmpty)
           .toSet(),
-      autoUpdateWifiOnly: map['autoUpdateWifiOnly'] != 'false',
       lastUpdateCheckAt: nonEmpty('lastUpdateCheckAt'),
     );
   }

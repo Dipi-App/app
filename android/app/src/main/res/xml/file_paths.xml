@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Paths the update FileProvider may share. Only the app-private
-     dipi-update folder is exposed, never a public directory. -->
-<paths>
-    <external-files-path name="update_external" path="dipi-update/" />
-    <files-path name="update_files" path="dipi-update/" />
-    <cache-path name="update_cache" path="dipi-update/" />
-</paths>

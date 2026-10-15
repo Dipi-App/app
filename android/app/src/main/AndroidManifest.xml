@@ -1,8 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- The GitHub release check is the only network feature. -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- In-app update: allow handing a downloaded APK to the package installer. -->
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <!-- Optional app lock (fingerprint / face). -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     <uses-feature android:name="android.hardware.fingerprint" android:required="false"/>
@@ -39,19 +37,6 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-
-        <!-- Exposes the downloaded APK (in the app-private update folder) to the
-             system installer. open_filex ships its own provider as well; this one
-             is scoped to the update folder only. -->
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.dipi_update"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
-        </provider>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

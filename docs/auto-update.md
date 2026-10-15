@@ -1,99 +1,76 @@
-# به‌روزرسانی خودکار برنامه / Auto-update
+# بررسی نسخه‌ی جدید / Update check
 
 ## به زبان ساده (فارسی)
 
-دیپی خودش می‌فهمد که نسخه‌ی تازه‌تری هست و آن را نصب می‌کند. کاربر لازم نیست
-چیزی دانلود کند یا به سایت برود.
+دیپی خودش می‌فهمد که نسخه‌ی تازه‌تری هست، ولی **هیچ‌وقت خودش چیزی دانلود یا
+نصب نمی‌کند**. فقط خبر می‌دهد و یک دکمه می‌گذارد که صفحه‌ی دانلود را در مرورگر
+باز می‌کند.
 
 ### چطور کار می‌کند؟
 
-۱. وقتی برنامه باز می‌شود، **حداکثر هر ۶ ساعت یک‌بار** نسخه‌ی آخر را از
-   **GitHub Releases** می‌پرسد (`api.github.com/.../releases/latest`). اگر
-   اینترنت نباشد یا پاسخ نیاید، **هیچ پیامی نشان نمی‌دهد**.
+۱. وقتی برنامه باز می‌شود، **حداکثر روزی یک‌بار** نسخه‌ی آخر را از
+   **GitHub Releases** می‌پرسد
+   (`https://api.github.com/repos/mst-ghi/dipi/releases/latest`).
 ۲. نسخه‌ی تگ (مثل `v1.2.0`) را با نسخه‌ی نصب‌شده مقایسه می‌کند (مقایسه‌ی
    عددی درست، نه متن‌به‌متن).
-۳. اگر نسخه‌ی تازه‌تر بود، فایل APK مناسب **پردازنده‌ی همین گوشی** را انتخاب
-   می‌کند (`arm64-v8a`، `armeabi-v7a`، `x86_64`)؛ اگر پیدا نشد، فایل
-   `universal` را می‌گیرد.
-۴. دانلود:
-   - روی **وای‌فای** خودش شروع می‌کند.
-   - روی **اینترنت موبایل** شروع نمی‌کند و اول می‌پرسد.
-   - با قطع‌شدن اینترنت یا بستن برنامه، دفعه‌ی بعد از همان‌جا ادامه می‌دهد
-     (دانلود با `Range`).
-۵. بعد از دانلود، **SHA-256** فایل را با فایل `.sha256` کنارش مقایسه می‌کند.
-   اگر یکی نبود، فایل پاک می‌شود و دوباره تلاش می‌کند. **هرگز فایل بررسی‌نشده
-   نصب نمی‌شود.**
-۶. آیکون سبز طلایی در نوار بالای صفحه («آماده نصب») نمایش داده می‌شود و با
-   زدن آن، دکمه‌ی «نصب نسخه جدید» می‌آید.
-۷. اگر گوشی اجازه‌ی «نصب از منابع ناشناس» بدهد، پنجره‌ی نصب باز می‌شود.
-   **داده‌های شما پاک نمی‌شود**، چون امضای برنامه یکی است.
+۳. اگر نسخه‌ی تازه‌تر نبود، **هیچ پیامی نشان نمی‌دهد** و برنامه مثل همیشه کار
+   می‌کند.
+۴. اگر نسخه‌ی تازه‌تر بود، یک پنجره‌ی ساده‌ی فارسی نشان می‌دهد: شماره‌ی نسخه،
+   «تازه‌ها در این نسخه» و یک دکمه‌ی **«دانلود از گیت‌هاب»**.
+۵. با زدن آن دکمه، **مرورگر** گوشی باز می‌شود و فایل APK از گیت‌هاب دانلود
+   می‌شود. نصب را خودت با مرورگر انجام می‌دهی
+   (راهنما: [`INSTALL.fa.md`](INSTALL.fa.md)).
 
-آیکون کوچک در نوار بالا وضعیت را نشان می‌دهد:
+آیکون کوچک فلش دانلود در نوار بالای صفحه هم تا وقتی نسخه‌ی تازه هست نمایش داده
+می‌شود؛ با زدنش همان پنجره باز می‌شود.
 
-| وضعیت | آیکون |
-| --- | --- |
-| نسخه‌ی تازه هست، دانلود نشده | فلش دانلود |
-| در حال دانلود | حلقه‌ی پیشرفت دور آیکون |
-| آماده‌ی نصب | تیک طلایی با نبض آرام |
-| خطا | علامت هشدار (زدن = تلاش دوباره) |
+### بررسی دستی
 
-اگر مودال باز است و کاربر وسط یک فرم (ثبت روزکار، پرداخت، …) باشد، مودال
-باز نمی‌شود تا از فرم بیرون بیاید. اگر یک‌بار «بعداً» بزند، تا پایان همان
-اجرا دوباره خودش باز نمی‌شود (فقط آیکون نبض می‌زند).
+از **تنظیمات → بررسی نسخه جدید** می‌توانی هر وقت خواستی بررسی کنی. بررسی دستی
+محدودیت روزی یک‌بار را نادیده می‌گیرد.
+
+### بدون اینترنت یا خطای API
+
+اگر اینترنت نباشد یا گیت‌هاب خطا بدهد، **هیچ پیامی نشان داده نمی‌شود و برنامه
+کرش نمی‌کند**. دیپی کاملاً آفلاین کار می‌کند؛ بررسی نسخه فقط یک امکان اضافه است.
+
+### چرا اجازه و نصب خودکار نداریم؟
+
+چون برنامه خودش APK را نصب نمی‌کند:
+
+- هیچ اجازه‌ی اضافه‌ای (مثل `REQUEST_INSTALL_PACKAGES`) لازم نیست،
+- هشدارهای امنیتی هنگام نصب کمتر می‌شود،
+- دانلود و نصب کاملاً در دست کاربر است.
 
 ### چطور نسخه‌ی جدید منتشر کنم؟
 
-مثل همیشه: یک کارت با پیام استاندارد روی `main` بفرست (`feat:` یا `fix:`).
-ربات این کارها را انجام می‌دهد:
+یک تگ نسخه بزن و آن را push کن:
 
-- شماره‌ی نسخه و `versionCode` را بالا می‌برد،
-- APK‌های `dipi-vX.Y.Z-<abi>.apk` و `dipi-vX.Y.Z-universal.apk` را می‌سازد،
-- برای هر APK یک فایل `...apk.sha256` می‌سازد (`<hash>  <filename>`)،
-- یادداشت‌های نسخه را از پیام‌های کارت‌ها می‌سازد،
-- Release را با همین فایل‌ها منتشر می‌کند.
+```bash
+git tag v1.2.3
+git push origin v1.2.3
+```
 
-> ⚠️ همه‌ی نسخه‌ها باید با **یک کلید امضا** ساخته شوند، وگرنه نصب خودکار کار
-> نمی‌کند. اگر Secretها نباشند، ربات با خطا متوقف می‌شود. راهنمای کلید در
-> [`RELEASE.md`](RELEASE.md) هست.
-
-### چطور امتحان کنم؟
-
-۱. نسخه‌ی `1.0.0` را روی گوشی نصب کن (از صفحه‌ی Releases).
-۲. یک تغییر کوچک بده و `1.0.1` را منتشر کن (کارت `fix: ...`).
-۳. برنامه را باز کن:
-   - آیکون دانلود در نوار بالا باید بیاید (روی وای‌فای خودش شروع می‌کند).
-   - اگر روی اینترنت موبایل باشی، اول می‌پرسد.
-   - پیشرفت دانلود و درصد باید درست باشد.
-   - بعد از دانلود، تیک طلایی بیاید و مودال «آماده نصب» باز شود.
-   - «نصب نسخه جدید» را بزن و نصب را کامل کن.
-۴. برنامه دوباره باز می‌شود؛ یک پیام کوتاه «نسخه جدید نصب شد» می‌بینی و
-   داده‌های قبلی سرجایشان هستند.
-
-برای امتحان سریع بدون صبر ۶ ساعت، از **تنظیمات → درباره دیپی → بررسی نسخه
-جدید** استفاده کن (بررسی دستی محدودیت زمانی ندارد).
+(یا مثل قبل کارت‌های استاندارد روی `main` بفرست.) راهنمای کامل در
+[`RELEASE.md`](RELEASE.md) است.
 
 ---
 
 ## In English
 
-Dipi updates itself from its **latest GitHub Release**. On start (at most once
-every 6 hours) it asks `api.github.com/.../releases/latest`, compares the tag
-with the installed version using a real numeric semver compare, picks the APK
-for the phone's ABI (or `universal`), and downloads it with progress + HTTP
-`Range` resume. The download starts by itself on Wi-Fi; on mobile it asks first
-unless the Wi-Fi-only switch is off. The file is verified against the published
-`.sha256` and the file is deleted on any mismatch — an unchecked APK is never
-installed. A header icon tracks the state (available / downloading / ready /
-error) and a modal drives download, cancel, retry and install. The install is
-handed to the Android installer via `open_filex`; the "install unknown apps"
-permission is handled through a small method channel that opens the right system
-page. Because the signature is unchanged, user data is kept.
+Dipi checks its **latest GitHub Release** on start, at most once every 24 hours,
+by calling `api.github.com/repos/mst-ghi/dipi/releases/latest`. It compares the
+tag with the installed version using a real numeric semver compare. If a newer
+version exists it shows a small Persian dialog with the version number, the
+release notes and a **"Download from GitHub"** button that opens the APK link in
+the system browser. Nothing is downloaded or installed by the app, so it needs no
+special permission and adds no install-time security warning. A small download
+icon appears in the header while an update is available.
 
-Publish: push a Conventional Commit to `main` (as before). The workflow now also
-writes `<apk>.sha256` files, builds release notes from the commits, keeps the
-`dipi-vX.Y.Z-<abi>.apk` / `-universal.apk` naming, and requires the shared
-keystore. See [`RELEASE.md`](RELEASE.md).
+Network and API errors are handled quietly (never a crash), and the app stays
+fully offline-capable. A manual check is available in
+**Settings → بررسی نسخه جدید** and ignores the 24-hour window.
 
-Test: install `1.0.0`, publish `1.0.1`, open the app and watch the icon, the
-progress, the modal and the install. Use **Settings → About → بررسی نسخه جدید**
-for a manual check that ignores the 6-hour window.
+There is no ABI matching or checksum download any more: the browser performs the
+download and the user can verify the published `<file>.apk.sha256` by hand (see
+[`INSTALL.fa.md`](INSTALL.fa.md)).

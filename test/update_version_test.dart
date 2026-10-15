@@ -67,7 +67,7 @@ void main() {
       expect(isCheckDue(now: now, lastCheck: null), isTrue);
     });
 
-    test('skips inside the 6-hour window', () {
+    test('skips inside the 24-hour window', () {
       expect(
         isCheckDue(now: now, lastCheck: now.subtract(const Duration(hours: 5))),
         isFalse,
@@ -76,7 +76,7 @@ void main() {
 
     test('runs after the window', () {
       expect(
-        isCheckDue(now: now, lastCheck: now.subtract(const Duration(hours: 7))),
+        isCheckDue(now: now, lastCheck: now.subtract(const Duration(hours: 25))),
         isTrue,
       );
     });

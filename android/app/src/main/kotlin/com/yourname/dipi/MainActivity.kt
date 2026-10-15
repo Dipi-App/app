@@ -2,14 +2,14 @@ package com.yourname.dipi
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
-import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    // Used only by the in-app update flow (see lib/features/app_update).
+    // Used only by the in-app "check for updates" flow (see
+    // lib/features/app_update). Opening the download in the browser needs no
+    // permission and keeps the app from installing packages itself.
     private val updateChannel = "dipi/update"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -19,31 +19,29 @@ class MainActivity : FlutterActivity() {
             updateChannel,
         ).setMethodCallHandler { call, result ->
             when (call.method) {
-                "canInstallPackages" -> result.success(canInstallPackages())
-                "openInstallSettings" -> {
-                    openInstallSettings()
-                    result.success(true)
+                "openUrl" -> {
+                    val url = call.argument<String>("url")
+                    if (url.isNullOrBlank()) {
+                        result.error("bad_args", "url is required", null)
+                    } else {
+                        result.success(openUrl(url))
+                    }
                 }
                 else -> result.notImplemented()
             }
         }
     }
 
-    /** Android 8+ gates APK installs behind a per-app permission. */
-    private fun canInstallPackages(): Boolean =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            packageManager.canRequestPackageInstalls()
-        } else {
+    /** Hands a web link to the system browser. Returns false when nothing can. */
+    private fun openUrl(url: String): Boolean {
+        return try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
             true
+        } catch (_: Exception) {
+            false
         }
-
-    /** Opens the system page where the user allows installs from this app. */
-    private fun openInstallSettings() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
-            data = Uri.parse("package:$packageName")
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        startActivity(intent)
     }
 }

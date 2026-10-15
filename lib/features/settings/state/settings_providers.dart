@@ -75,9 +75,6 @@ class SettingsController extends AsyncNotifier<AppSettings> {
   Future<void> setVoiceHintsEnabled(bool enabled) =>
       _persist(_current.copyWith(voiceHintsEnabled: enabled));
 
-  Future<void> setAutoUpdateWifiOnly(bool enabled) =>
-      _persist(_current.copyWith(autoUpdateWifiOnly: enabled));
-
   Future<void> setLastUpdateCheckAt(DateTime at) =>
       _persist(_current.copyWith(lastUpdateCheckAt: at.toIso8601String()));
 

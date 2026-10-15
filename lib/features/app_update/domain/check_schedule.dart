@@ -4,7 +4,7 @@
 bool isCheckDue({
   required DateTime now,
   required DateTime? lastCheck,
-  Duration interval = const Duration(hours: 6),
+  Duration interval = const Duration(hours: 24),
   bool manual = false,
 }) {
   if (manual) return true;

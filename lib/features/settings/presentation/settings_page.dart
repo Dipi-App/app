@@ -13,8 +13,8 @@ import '../../../domain/enums.dart';
 import '../../../shared/widgets/app_dialogs.dart';
 import '../../../shared/branding/dipi_logo.dart';
 import '../../../shared/widgets/section_card.dart';
-import '../../app_update/domain/update_phase.dart';
-import '../../app_update/presentation/update_sheet.dart';
+import '../../app_update/domain/update_state.dart';
+import '../../app_update/presentation/update_dialog.dart';
 import '../../app_update/state/update_controller.dart';
 import '../../app_update/state/update_providers.dart';
 import '../../backup/data/local_backup_service.dart';
@@ -315,58 +315,55 @@ class _UpdateSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final autoWifiOnly = ref.watch(settingsValueProvider).autoUpdateWifiOnly;
-    final settingsController = ref.read(settingsControllerProvider.notifier);
-    final phase = ref.watch(updateControllerProvider.select((s) => s.phase));
+    final state = ref.watch(updateControllerProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Divider(),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          value: autoWifiOnly,
-          onChanged: settingsController.setAutoUpdateWifiOnly,
-          title: const Text('دانلود خودکار فقط با Wi-Fi'),
-          subtitle: const Text(
-            'اگر خاموش باشد، روی اینترنت موبایل هم خودش دانلود می‌کند.',
-          ),
-        ),
-        const Divider(),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.system_update_alt_rounded),
           title: const Text('بررسی نسخه جدید'),
-          subtitle: Text(_statusText(phase)),
+          subtitle: Text(_statusText(state)),
           trailing: const Icon(DirectionalIcons.forward),
           onTap: () => _check(context, ref),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Text(
+            'دانلود از گیت‌هاب در مرورگر باز می‌شود؛ برنامه چیزی را خودش نصب نمی‌کند.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  String _statusText(UpdatePhase phase) => switch (phase) {
-    UpdatePhase.ready => 'نسخه جدید آماده نصب است',
-    UpdatePhase.downloading => 'در حال دانلود نسخه جدید',
-    UpdatePhase.available => 'نسخه جدید هست',
-    UpdatePhase.error => 'دانلود نسخه جدید ناموفق بود',
-    UpdatePhase.hidden => 'از گیت‌هاب بررسی می‌شود',
-  };
+  String _statusText(UpdateState state) {
+    if (state.checking) return 'در حال بررسی…';
+    final release = state.available;
+    if (release != null) {
+      return 'نسخه ${toPersianDigits(release.version.toString())} آماده دانلود است';
+    }
+    return 'از گیت‌هاب بررسی می‌شود';
+  }
 
   Future<void> _check(BuildContext context, WidgetRef ref) async {
     final controller = ref.read(updateControllerProvider.notifier);
-    final outcome = await controller.checkForUpdates(manual: true);
+    final result = await controller.check(manual: true);
     if (!context.mounted) return;
-    switch (outcome) {
+    switch (result.outcome) {
       case CheckOutcome.found:
-        await showUpdateSheet(context);
+        if (result.release != null) {
+          await showUpdateDialog(context, result.release!);
+        }
       case CheckOutcome.upToDate:
         showInfoSnackBar(context, 'نسخه شما به‌روز است.');
-      case CheckOutcome.busy:
-        showInfoSnackBar(context, 'همین حالا مشغول دانلود است.');
       case CheckOutcome.skipped:
       case CheckOutcome.offLine:
-      case CheckOutcome.rateLimited:
         showInfoSnackBar(
           context,
           'بررسی انجام نشد. اینترنت را بررسی کن و دوباره بزن.',

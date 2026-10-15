@@ -1,59 +1,25 @@
 import 'app_release.dart';
-import 'release_asset.dart';
-import 'update_phase.dart';
 
-/// Everything the header icon and the modal need to render.
+/// What the header icon and the Settings row need to render.
 class UpdateState {
-  const UpdateState({
-    this.phase = UpdatePhase.hidden,
-    this.release,
-    this.apk,
-    this.checksum,
-    this.receivedBytes = 0,
-    this.totalBytes = 0,
-    this.errorMessage,
-    this.dismissedThisSession = false,
-  });
+  const UpdateState({this.available, this.checking = false});
 
-  final UpdatePhase phase;
-  final AppRelease? release;
-  final ReleaseAsset? apk;
-  final ReleaseAsset? checksum;
-  final int receivedBytes;
-  final int totalBytes;
-  final String? errorMessage;
+  /// The newest release, when it is newer than the installed version.
+  final AppRelease? available;
 
-  /// True once the user tapped "بعداً" for the ready modal in this app run.
-  final bool dismissedThisSession;
+  /// True while a check is in flight.
+  final bool checking;
 
-  bool get hasUpdate => phase != UpdatePhase.hidden;
-
-  /// 0..1, or null while the total size is unknown.
-  double? get progress {
-    if (phase != UpdatePhase.downloading || totalBytes <= 0) return null;
-    return (receivedBytes / totalBytes).clamp(0.0, 1.0);
-  }
+  bool get hasUpdate => available != null;
 
   UpdateState copyWith({
-    UpdatePhase? phase,
-    AppRelease? release,
-    ReleaseAsset? apk,
-    ReleaseAsset? checksum,
-    int? receivedBytes,
-    int? totalBytes,
-    String? errorMessage,
-    bool clearError = false,
-    bool? dismissedThisSession,
+    AppRelease? available,
+    bool? checking,
+    bool clearAvailable = false,
   }) {
     return UpdateState(
-      phase: phase ?? this.phase,
-      release: release ?? this.release,
-      apk: apk ?? this.apk,
-      checksum: checksum ?? this.checksum,
-      receivedBytes: receivedBytes ?? this.receivedBytes,
-      totalBytes: totalBytes ?? this.totalBytes,
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-      dismissedThisSession: dismissedThisSession ?? this.dismissedThisSession,
+      available: clearAvailable ? null : (available ?? this.available),
+      checking: checking ?? this.checking,
     );
   }
 }
