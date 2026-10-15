@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="301 300 422 424" width="422" height="424"><defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#14525C"/><stop offset="1" stop-color="#08292F"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#F8D26A"/><stop offset="1" stop-color="#D9962A"/></linearGradient>
+</defs><path d="M 337,300 H 511 A 212,212 0 0 1 511,724 H 337 Q 301,724 301,688 V 336 Q 301,300 337,300 Z M 390.4,436.0 L 523.9,382.1 L 497.9,463.2 L 542.8,621.0 L 465.5,476.3 Z" fill="url(#gold)" fill-rule="evenodd"/></svg>

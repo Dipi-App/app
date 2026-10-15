@@ -1,0 +1,7 @@
+# Merge into your pubspec.yaml.
+# Add the dev packages with:
+#   flutter pub add --dev flutter_launcher_icons flutter_native_splash
+
+flutter:
+  assets:
+    - assets/branding/
