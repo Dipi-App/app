@@ -27,3 +27,9 @@ final workEntryDaoProvider = Provider<WorkEntryDao>(
 final paymentDaoProvider = Provider<PaymentDao>(
   (ref) => PaymentDao(ref.watch(databaseProvider)),
 );
+
+/// The earliest activity date in the whole ledger, used by "from the start"
+/// style filters. Null while the ledger is empty.
+final earliestActivityProvider = StreamProvider<String?>(
+  (ref) => ref.watch(paymentDaoProvider).watchEarliestActivity(),
+);

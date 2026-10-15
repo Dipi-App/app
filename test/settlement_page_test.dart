@@ -14,6 +14,12 @@ import 'package:flutter_test/flutter_test.dart';
 Future<void> _pump(WidgetTester tester, AppDatabase database, int employerId) async {
   await tester.binding.setSurfaceSize(const Size(420, 900));
   addTearDown(() => tester.binding.setSurfaceSize(null));
+  // Turning animations off keeps the assertions deterministic and exercises
+  // the reduce-motion code path.
+  tester.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
+  addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+
   await tester.pumpWidget(
     ProviderScope(
       overrides: [databaseProvider.overrideWithValue(database)],

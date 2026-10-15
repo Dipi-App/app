@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/constants/app_info.dart';
+import '../../../core/theme/brand_colors.dart';
 import '../../../shared/utils/motion.dart';
 
 class SplashPage extends StatelessWidget {
@@ -10,15 +11,12 @@ class SplashPage extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback? onRetry;
 
-  static const Color _top = Color(0xFF428E82);
-  static const Color _bottom = Color(0xFF143F3A);
-
   @override
   Widget build(BuildContext context) {
     final reduced = reduceMotion(context);
 
     Widget logo = Image.asset(
-      'assets/icon/splash_logo.png',
+      'assets/branding/splash_logo.png',
       width: 152,
       height: 152,
       filterQuality: FilterQuality.high,
@@ -29,7 +27,7 @@ class SplashPage extends StatelessWidget {
         fontFamily: 'Vazirmatn',
         fontWeight: FontWeight.w700,
         fontSize: 40,
-        color: Colors.white,
+        color: BrandColors.gold500,
         letterSpacing: 1,
       ),
     );
@@ -44,7 +42,7 @@ class SplashPage extends StatelessWidget {
       ),
     );
 
-    // The native splash already shows the same logo on the same gradient, so the
+    // The native splash shows the same logo on the same solid teal, so the
     // in-app splash does not fade the logo in again — that would blink.
     if (!reduced) {
       tagline = tagline
@@ -54,55 +52,47 @@ class SplashPage extends StatelessWidget {
     }
 
     return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [_top, _bottom],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Spacer(flex: 3),
-                  logo,
-                  const SizedBox(height: 22),
-                  name,
-                  const SizedBox(height: 14),
-                  tagline,
-                  const Spacer(flex: 3),
-                  if (errorMessage == null)
-                    SizedBox(
-                      width: 26,
-                      height: 26,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.4,
-                        color: Colors.white.withValues(alpha: 0.75),
-                      ),
-                    )
-                  else
-                    Column(
-                      children: [
-                        Text(
-                          errorMessage!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        const SizedBox(height: 12),
-                        FilledButton.tonal(
-                          onPressed: onRetry,
-                          child: const Text('تلاش دوباره'),
-                        ),
-                      ],
+      backgroundColor: BrandColors.teal800,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(flex: 3),
+                logo,
+                const SizedBox(height: 22),
+                name,
+                const SizedBox(height: 14),
+                tagline,
+                const Spacer(flex: 3),
+                if (errorMessage == null)
+                  SizedBox(
+                    width: 26,
+                    height: 26,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.4,
+                      color: Colors.white.withValues(alpha: 0.75),
                     ),
-                  const SizedBox(height: 40),
-                ],
-              ),
+                  )
+                else
+                  Column(
+                    children: [
+                      Text(
+                        errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton.tonal(
+                        onPressed: onRetry,
+                        child: const Text('تلاش دوباره'),
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: 40),
+              ],
             ),
           ),
         ),

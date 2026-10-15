@@ -102,6 +102,32 @@ void main() {
       expect(range.map((e) => e.date), ['2024-04-20', '2024-05-20']);
     });
 
+    test('range query can be limited to one employer', () async {
+      final a = await addEmployer('الف');
+      final b = await addEmployer('ب');
+      await addEntry(employerId: a, date: '2024-05-01');
+      await addEntry(employerId: b, date: '2024-05-02');
+
+      final range = await entries
+          .watchRange('2024-05-01', '2024-06-01', employerId: b)
+          .first;
+      expect(range, hasLength(1));
+      expect(range.single.employerId, b);
+    });
+
+    test('sums per employer are aggregated in sql', () async {
+      final a = await addEmployer('الف');
+      final b = await addEmployer('ب');
+      await addEntry(employerId: a, date: '2024-05-01', wage: 100);
+      await addEntry(employerId: a, date: '2024-05-02', wage: 50);
+      await addEntry(employerId: b, date: '2024-05-03');
+
+      final sums = await entries.watchSumsByEmployer().first;
+      expect(sums[a]!.wageRial, 150);
+      expect(sums[a]!.outOfPocketRial, 0);
+      expect(sums[b]!.wageRial, 0);
+    });
+
     test('orders a day by start time', () async {
       final id = await addEmployer('الف');
       await addEntry(employerId: id, date: '2024-05-12', start: '14:00');

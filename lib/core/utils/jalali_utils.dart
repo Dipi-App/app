@@ -90,6 +90,33 @@ DateTime firstDayOfJalaliMonth(DateTime anyDayInMonth) {
   return Jalali(j.year, j.month, 1).toDateTime();
 }
 
+DateTime firstDayOfJalaliYear(DateTime anyDayInYear) {
+  final j = toJalali(anyDayInYear);
+  return Jalali(j.year, 1, 1).toDateTime();
+}
+
+/// Canonical key for a Jalali month: the ISO date of its first day.
+String jalaliMonthKey(DateTime day) => toIsoDate(firstDayOfJalaliMonth(day));
+
+/// Every Jalali month from [from] to [to], both inclusive.
+List<DateTime> jalaliMonthsBetween(DateTime from, DateTime to) {
+  final first = firstDayOfJalaliMonth(from);
+  final last = firstDayOfJalaliMonth(to);
+  final months = <DateTime>[];
+  var cursor = first;
+  while (!cursor.isAfter(last)) {
+    months.add(cursor);
+    cursor = nextJalaliMonth(cursor);
+  }
+  return months;
+}
+
+int jalaliMonthDistance(DateTime from, DateTime to) {
+  final a = toJalali(from);
+  final b = toJalali(to);
+  return (b.year - a.year) * 12 + (b.month - a.month);
+}
+
 DateTime nextJalaliMonth(DateTime anyDayInMonth) {
   final j = toJalali(anyDayInMonth);
   return j.addMonths(1).withDay(1).toDateTime();

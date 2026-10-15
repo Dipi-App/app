@@ -26,6 +26,42 @@ class PaymentDao {
         .watch();
   }
 
+  /// [startIso] is inclusive, [endIso] is exclusive.
+  Stream<List<Payment>> watchRange(
+    String startIso,
+    String endIso, {
+    int? employerId,
+  }) {
+    return (_db.select(_db.payments)
+          ..where(
+            (t) =>
+                t.date.isBiggerOrEqualValue(startIso) &
+                t.date.isSmallerThanValue(endIso) &
+                (employerId == null
+                    ? const Constant(true)
+                    : t.employerId.equals(employerId)),
+          )
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
+  /// The earliest activity date in the whole ledger, or null when empty.
+  Stream<String?> watchEarliestActivity() {
+    final query = _db.customSelect(
+      'SELECT MIN(d) AS earliest FROM ('
+      'SELECT MIN(date) AS d FROM work_entries '
+      'UNION ALL '
+      'SELECT MIN(date) AS d FROM payments'
+      ')',
+      readsFrom: {_db.workEntries, _db.payments},
+    );
+    return query
+        .map((row) => row.read<String?>('earliest'))
+        .watchSingle();
+  }
+
   Future<List<Payment>> forEmployer(int employerId) {
     return (_db.select(_db.payments)
           ..where((t) => t.employerId.equals(employerId)))

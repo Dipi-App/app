@@ -50,8 +50,12 @@ class EmployerPalette {
 class AppColors {
   const AppColors._();
 
-  static const int seed = 0xFF2E7D6F;
-  static const int accent = 0xFFC0562B;
+  /// Brand seed: turquoise ink `teal800`. See [BrandColors] and
+  /// `assets/branding/BRANDING.md`.
+  static const int seed = 0xFF0D3B42;
+
+  /// Brand accent: `gold700`.
+  static const int accent = 0xFFD9962A;
 
   static const int creditor = 0xFF2E7D6F;
   static const int debtor = 0xFFC0392B;

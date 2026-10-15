@@ -47,18 +47,36 @@ class SettingsController extends AsyncNotifier<AppSettings> {
         : _current.copyWith(driveAccountEmail: email),
   );
 
+  /// Applies the settings carried inside a restored backup.
+  Future<void> applyImported(Map<String, String> values) {
+    final imported = AppSettings.fromMap(values);
+    return _persist(
+      _current.copyWith(
+        currencyUnit: imported.currencyUnit,
+        themeChoice: imported.themeChoice,
+      ),
+    );
+  }
+
   Future<void> setAppLock({
     required bool enabled,
     String? pinHash,
+    String? pinSalt,
+    int? pinLength,
     bool biometric = false,
   }) => _persist(
     _current.copyWith(
       appLockEnabled: enabled,
       appLockPinHash: pinHash,
+      appLockSalt: pinSalt,
+      appLockPinLength: pinLength,
       clearPin: pinHash == null && !enabled,
       biometricEnabled: biometric,
     ),
   );
+
+  Future<void> setBiometricEnabled(bool enabled) =>
+      _persist(_current.copyWith(biometricEnabled: enabled));
 }
 
 final settingsControllerProvider =

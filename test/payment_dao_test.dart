@@ -1,6 +1,7 @@
 import 'package:dipi/data/db/app_database.dart';
 import 'package:dipi/data/db/employer_dao.dart';
 import 'package:dipi/data/db/payment_dao.dart';
+import 'package:dipi/data/db/work_entry_dao.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,11 +10,13 @@ void main() {
   late AppDatabase database;
   late EmployerDao employers;
   late PaymentDao payments;
+  late WorkEntryDao entries;
 
   setUp(() {
     database = AppDatabase.forTesting(NativeDatabase.memory());
     employers = EmployerDao(database);
     payments = PaymentDao(database);
+    entries = WorkEntryDao(database);
   });
 
   tearDown(() => database.close());
@@ -112,6 +115,47 @@ void main() {
     final totals = await payments.watchTotalsByEmployer().first;
     expect(totals[a], 350);
     expect(totals[b], 40);
+  });
+
+  test('range query is inclusive of the start and exclusive of the end',
+      () async {
+    final id = await addEmployer('الف');
+    await addPayment(employerId: id, amount: 1, date: '2024-04-19');
+    await addPayment(employerId: id, amount: 2, date: '2024-04-20');
+    await addPayment(employerId: id, amount: 3, date: '2024-05-20');
+    await addPayment(employerId: id, amount: 4, date: '2024-05-21');
+
+    final range = await payments.watchRange('2024-04-20', '2024-05-21').first;
+    expect(range.map((p) => p.amount), [3, 2]);
+  });
+
+  test('range query can be limited to one employer', () async {
+    final a = await addEmployer('الف');
+    final b = await addEmployer('ب');
+    await addPayment(employerId: a, amount: 10, date: '2024-05-01');
+    await addPayment(employerId: b, amount: 20, date: '2024-05-02');
+
+    final range = await payments
+        .watchRange('2024-05-01', '2024-06-01', employerId: a)
+        .first;
+    expect(range.map((p) => p.amount), [10]);
+  });
+
+  test('earliest activity spans entries and payments', () async {
+    expect(await payments.watchEarliestActivity().first, isNull);
+
+    final id = await addEmployer('الف');
+    await addPayment(employerId: id, amount: 1, date: '2024-05-10');
+    expect(await payments.watchEarliestActivity().first, '2024-05-10');
+
+    await entries.create(
+      WorkEntriesCompanion.insert(
+        employerId: id,
+        date: '2024-02-01',
+        createdAt: DateTime.now().toIso8601String(),
+      ),
+    );
+    expect(await payments.watchEarliestActivity().first, '2024-02-01');
   });
 
   test('deleting an employer deletes its payments', () async {

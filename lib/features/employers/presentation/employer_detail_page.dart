@@ -10,6 +10,7 @@ import '../../../data/db/app_database.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/settlement.dart';
 import '../../../shared/widgets/app_dialogs.dart';
+import '../../../shared/widgets/count_up_text.dart';
 import '../../../shared/widgets/money_text.dart';
 import '../../../shared/widgets/section_card.dart';
 import '../../../shared/widgets/work_entry_tile.dart';
@@ -102,15 +103,9 @@ class EmployerDetailPage extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    _Stat(
-                      label: 'روز کاری',
-                      value: toPersianDigits(summary.dayCount),
-                    ),
+                    _Stat(label: 'روز کاری', count: summary.dayCount),
                     _Stat(label: 'ساعت', value: formatHours(summary.hours)),
-                    _Stat(
-                      label: 'روزکار',
-                      value: toPersianDigits(summary.entryCount),
-                    ),
+                    _Stat(label: 'روزکار', count: summary.entryCount),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -342,8 +337,7 @@ class _BalanceCard extends StatelessWidget {
 
     return Card(
       color: color.withValues(alpha: 0.10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+      child: Pressable(
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => SettlementPage(employerId: employerId),
@@ -539,10 +533,11 @@ class _Header extends StatelessWidget {
 }
 
 class _Stat extends StatelessWidget {
-  const _Stat({required this.label, this.value, this.valueWidget});
+  const _Stat({required this.label, this.value, this.count, this.valueWidget});
 
   final String label;
   final String? value;
+  final int? count;
   final Widget? valueWidget;
 
   @override
@@ -552,12 +547,19 @@ class _Stat extends StatelessWidget {
       child: Column(
         children: [
           valueWidget ??
-              Text(
-                value ?? '—',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              (count != null
+                  ? CountUpText(
+                      value: count!,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )
+                  : Text(
+                      value ?? '—',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )),
           const SizedBox(height: 2),
           Text(
             label,

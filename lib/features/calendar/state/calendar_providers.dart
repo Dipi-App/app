@@ -24,9 +24,6 @@ final visibleMonthProvider = NotifierProvider<VisibleMonth, DateTime>(
   VisibleMonth.new,
 );
 
-/// Canonical key for a Jalali month: the ISO date of its first day.
-String monthKeyOf(DateTime day) => toIsoDate(firstDayOfJalaliMonth(day));
-
 final monthEntriesProvider = StreamProvider.autoDispose
     .family<List<WorkEntry>, String>((ref, monthKey) {
       final start = DateTime.parse(monthKey);

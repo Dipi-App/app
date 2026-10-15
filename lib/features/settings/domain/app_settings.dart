@@ -7,6 +7,8 @@ class AppSettings {
     this.themeChoice = ThemeChoice.system,
     this.appLockEnabled = false,
     this.appLockPinHash,
+    this.appLockSalt,
+    this.appLockPinLength,
     this.biometricEnabled = false,
     this.autoBackupEnabled = false,
     this.lastBackupAt,
@@ -18,6 +20,8 @@ class AppSettings {
   final ThemeChoice themeChoice;
   final bool appLockEnabled;
   final String? appLockPinHash;
+  final String? appLockSalt;
+  final int? appLockPinLength;
   final bool biometricEnabled;
   final bool autoBackupEnabled;
   final String? lastBackupAt;
@@ -34,6 +38,8 @@ class AppSettings {
     ThemeChoice? themeChoice,
     bool? appLockEnabled,
     String? appLockPinHash,
+    String? appLockSalt,
+    int? appLockPinLength,
     bool clearPin = false,
     bool? biometricEnabled,
     bool? autoBackupEnabled,
@@ -47,6 +53,10 @@ class AppSettings {
       themeChoice: themeChoice ?? this.themeChoice,
       appLockEnabled: appLockEnabled ?? this.appLockEnabled,
       appLockPinHash: clearPin ? null : (appLockPinHash ?? this.appLockPinHash),
+      appLockSalt: clearPin ? null : (appLockSalt ?? this.appLockSalt),
+      appLockPinLength: clearPin
+          ? null
+          : (appLockPinLength ?? this.appLockPinLength),
       biometricEnabled: biometricEnabled ?? this.biometricEnabled,
       autoBackupEnabled: autoBackupEnabled ?? this.autoBackupEnabled,
       lastBackupAt: lastBackupAt ?? this.lastBackupAt,
@@ -61,6 +71,8 @@ class AppSettings {
     'themeChoice': themeChoice.name,
     'appLockEnabled': appLockEnabled.toString(),
     'appLockPinHash': appLockPinHash ?? '',
+    'appLockSalt': appLockSalt ?? '',
+    'appLockPinLength': appLockPinLength?.toString() ?? '',
     'biometricEnabled': biometricEnabled.toString(),
     'autoBackupEnabled': autoBackupEnabled.toString(),
     'lastBackupAt': lastBackupAt ?? '',
@@ -79,6 +91,8 @@ class AppSettings {
       themeChoice: ThemeChoice.fromName(map['themeChoice']),
       appLockEnabled: map['appLockEnabled'] == 'true',
       appLockPinHash: nonEmpty('appLockPinHash'),
+      appLockSalt: nonEmpty('appLockSalt'),
+      appLockPinLength: int.tryParse(map['appLockPinLength'] ?? ''),
       biometricEnabled: map['biometricEnabled'] == 'true',
       autoBackupEnabled: map['autoBackupEnabled'] == 'true',
       lastBackupAt: nonEmpty('lastBackupAt'),

@@ -8,12 +8,19 @@ class WorkEntryDao {
   final AppDatabase _db;
 
   /// [startIso] is inclusive, [endIso] is exclusive. ISO text sorts correctly.
-  Stream<List<WorkEntry>> watchRange(String startIso, String endIso) {
+  Stream<List<WorkEntry>> watchRange(
+    String startIso,
+    String endIso, {
+    int? employerId,
+  }) {
     return (_db.select(_db.workEntries)
           ..where(
             (t) =>
                 t.date.isBiggerOrEqualValue(startIso) &
-                t.date.isSmallerThanValue(endIso),
+                t.date.isSmallerThanValue(endIso) &
+                (employerId == null
+                    ? const Constant(true)
+                    : t.employerId.equals(employerId)),
           )
           ..orderBy([
             (t) => OrderingTerm(expression: t.date),

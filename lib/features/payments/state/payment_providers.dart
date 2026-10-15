@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/database_providers.dart';
+import '../../../core/utils/jalali_utils.dart';
 import '../../../data/db/app_database.dart';
 import '../../../data/db/work_entry_dao.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/settlement.dart';
+import '../../../domain/stats.dart';
 import '../../employers/state/employer_providers.dart';
 
 class PaymentsFilter {
@@ -122,3 +124,22 @@ final employerSettlementProvider = Provider.family<SettlementSummary, int>((
       const <Payment>[];
   return summarizeSettlement(entries: entries, payments: payments);
 });
+
+/// The last 12 Jalali months for one employer, for the settlement chart.
+final employerMonthlySeriesProvider =
+    Provider.family<List<MonthlyPoint>, int>((ref, employerId) {
+      final to = firstDayOfJalaliMonth(DateTime.now());
+      final from = toJalali(to).addMonths(-11).withDay(1).toDateTime();
+      final entries =
+          ref.watch(employerEntriesProvider(employerId)).value ??
+          const <WorkEntry>[];
+      final payments =
+          ref.watch(employerPaymentsProvider(employerId)).value ??
+          const <Payment>[];
+      return monthlySeries(
+        entries: entries,
+        payments: payments,
+        from: from,
+        to: to,
+      );
+    });

@@ -8,6 +8,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Future<void> _pumpApp(WidgetTester tester, AppDatabase database) async {
+  // Turning animations off keeps the assertions deterministic and exercises
+  // the reduce-motion code path.
+  tester.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
+  addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [databaseProvider.overrideWithValue(database)],
@@ -60,12 +65,13 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('واحد پول'), findsOneWidget);
-    expect(find.text('درباره دیپی'), findsOneWidget);
+    expect(find.textContaining('پشتیبان'), findsWidgets);
 
     await tester.tap(find.text('آمار').last);
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.textContaining('آماری برای نمایش نیست'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('جمع بازه'), findsOneWidget);
+    expect(find.text('نمودار ماهانه'), findsOneWidget);
 
     await _disposeApp(tester);
   });

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../features/backup/presentation/widgets/backup_reminder_banner.dart';
 import '../features/calendar/presentation/calendar_page.dart';
 import '../features/employers/presentation/employers_page.dart';
 import '../features/payments/presentation/payments_page.dart';
@@ -35,7 +36,12 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _index, children: _pages),
+      body: Column(
+        children: [
+          const BackupReminderBanner(),
+          Expanded(child: IndexedStack(index: _index, children: _pages)),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (value) => setState(() => _index = value),

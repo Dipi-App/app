@@ -7,6 +7,7 @@ import '../../../core/utils/time_utils.dart';
 import '../../../domain/enums.dart';
 import '../../../shared/widgets/balance_chip.dart';
 import '../../../shared/widgets/money_text.dart';
+import '../../../shared/widgets/monthly_chart.dart';
 import '../../../shared/widgets/section_card.dart';
 import '../../employers/presentation/widgets/employer_avatar.dart';
 import '../../employers/state/employer_providers.dart';
@@ -134,6 +135,11 @@ class SettlementPage extends ConsumerWidget {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          SectionCard(
+            title: 'نمودار ۱۲ ماه اخیر',
+            child: _EmployerChart(employerId: employerId),
+          ),
           if (summary.pendingCount > 0) ...[
             const SizedBox(height: 12),
             Container(
@@ -235,6 +241,33 @@ class SettlementPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+class _EmployerChart extends ConsumerWidget {
+  const _EmployerChart({required this.employerId});
+
+  final int employerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final series = ref.watch(employerMonthlySeriesProvider(employerId));
+    final hasData = series.any((point) => !point.isEmpty);
+    if (!hasData) {
+      final theme = Theme.of(context);
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: Text(
+            'در یک سال گذشته فعالیتی ثبت نشده.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+    return MonthlyChart(points: series, height: 210);
   }
 }
 

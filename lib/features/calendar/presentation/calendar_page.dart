@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/jalali_utils.dart';
-import '../../../core/utils/persian_digits.dart';
 import '../../../core/utils/time_utils.dart';
 import '../../../shared/utils/motion.dart';
+import '../../../shared/widgets/count_up_text.dart';
 import '../../../shared/widgets/money_text.dart';
 import '../state/calendar_providers.dart';
 import 'widgets/day_cell.dart';
@@ -153,7 +153,7 @@ class _MonthGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cells = jalaliMonthGrid(month);
-    final monthKey = monthKeyOf(month);
+    final monthKey = jalaliMonthKey(month);
     final colorsByDay = ref.watch(monthDayColorsProvider(monthKey));
     final pendingDays = ref.watch(monthPendingDaysProvider(monthKey));
     final rows = cells.length ~/ 7;
@@ -207,7 +207,7 @@ class _MonthSummary extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final month = ref.watch(visibleMonthProvider);
-    final totals = ref.watch(monthTotalsProvider(monthKeyOf(month)));
+    final totals = ref.watch(monthTotalsProvider(jalaliMonthKey(month)));
     final theme = Theme.of(context);
 
     return Container(
@@ -222,7 +222,7 @@ class _MonthSummary extends ConsumerWidget {
         children: [
           _SummaryItem(
             label: 'روز کاری',
-            value: toPersianDigits(totals.dayCount),
+            count: totals.dayCount,
           ),
           _SummaryItem(
             label: 'ساعت',
@@ -242,7 +242,7 @@ class _MonthSummary extends ConsumerWidget {
           if (totals.pendingCount > 0)
             _SummaryItem(
               label: 'در انتظار',
-              value: toPersianDigits(totals.pendingCount),
+              count: totals.pendingCount,
             ),
         ],
       ),
@@ -251,10 +251,16 @@ class _MonthSummary extends ConsumerWidget {
 }
 
 class _SummaryItem extends StatelessWidget {
-  const _SummaryItem({required this.label, this.value, this.valueWidget});
+  const _SummaryItem({
+    required this.label,
+    this.value,
+    this.count,
+    this.valueWidget,
+  });
 
   final String label;
   final String? value;
+  final int? count;
   final Widget? valueWidget;
 
   @override
@@ -264,12 +270,19 @@ class _SummaryItem extends StatelessWidget {
       child: Column(
         children: [
           valueWidget ??
-              Text(
-                value ?? '—',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              (count != null
+                  ? CountUpText(
+                      value: count!,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )
+                  : Text(
+                      value ?? '—',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )),
           const SizedBox(height: 2),
           Text(
             label,
