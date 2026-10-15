@@ -147,7 +147,8 @@ class _FakeDownload extends UpdateDownloadService {
     bool allowResume = true,
   }) async {
     if (fail) throw UpdateDownloadException('دانلود انجام نشد.');
-    await file.writeAsBytes(payload, flush: true);
+    // Synchronous write keeps the test free of real async file I/O.
+    file.writeAsBytesSync(payload, flush: true);
     onProgress(payload.length, payload.length);
   }
 
@@ -156,7 +157,7 @@ class _FakeDownload extends UpdateDownloadService {
       sha256OfBytes(checksumOf ?? payload);
 
   @override
-  Future<String> hashOfFile(File file) => sha256OfFile(file);
+  Future<String> hashOfFile(File file) async => sha256OfBytes(payload);
 }
 
 class _FakeInstaller extends ApkInstaller {
@@ -192,6 +193,17 @@ class _FakeSettings extends SettingsController {
 }
 
 void main() {
+  Future<void> waitForPhase(ProviderContainer container, UpdatePhase phase) async {
+    for (var i = 0; i < 200; i++) {
+      if (container.read(updateControllerProvider).phase == phase) return;
+      await Future<void>.delayed(Duration.zero);
+    }
+    fail(
+      'Timed out waiting for $phase; got '
+      '${container.read(updateControllerProvider).phase}',
+    );
+  }
+
   late _FakeGitHub github;
   late _FakeConnectivity connectivity;
   late _FakeStorage storage;
@@ -243,7 +255,7 @@ void main() {
     final outcome = await controller.checkForUpdates(manual: false);
     expect(outcome, CheckOutcome.found);
 
-    await pumpEventQueue();
+    await waitForPhase(container, UpdatePhase.ready);
     final state = container.read(updateControllerProvider);
     expect(state.phase, UpdatePhase.ready);
     expect(state.release?.version, const SemanticVersion(1, 2, 0));
@@ -257,7 +269,6 @@ void main() {
     final controller = container.read(updateControllerProvider.notifier);
 
     await controller.checkForUpdates(manual: false);
-    await pumpEventQueue();
     expect(container.read(updateControllerProvider).phase, UpdatePhase.available);
 
     await controller.startDownload(force: true);
@@ -291,7 +302,7 @@ void main() {
     final controller = container.read(updateControllerProvider.notifier);
 
     await controller.checkForUpdates(manual: false);
-    await pumpEventQueue();
+    await waitForPhase(container, UpdatePhase.error);
 
     final state = container.read(updateControllerProvider);
     expect(state.phase, UpdatePhase.error);
@@ -306,7 +317,6 @@ void main() {
     final controller = container.read(updateControllerProvider.notifier);
 
     await controller.checkForUpdates(manual: false);
-    await pumpEventQueue();
     expect(github.calls, 1);
 
     expect(await controller.checkForUpdates(manual: false), CheckOutcome.skipped);
@@ -323,7 +333,7 @@ void main() {
     final controller = container.read(updateControllerProvider.notifier);
 
     await controller.checkForUpdates(manual: false);
-    await pumpEventQueue();
+    await waitForPhase(container, UpdatePhase.ready);
     controller.dismissModal();
     expect(container.read(updateControllerProvider).dismissedThisSession, isTrue);
   });
@@ -358,7 +368,7 @@ void main() {
     final controller = container.read(updateControllerProvider.notifier);
 
     await controller.checkForUpdates(manual: false);
-    await pumpEventQueue();
+    await waitForPhase(container, UpdatePhase.ready);
     expect(container.read(updateControllerProvider).phase, UpdatePhase.ready);
 
     expect(await controller.install(), InstallOutcome.needsPermission);

@@ -201,6 +201,13 @@ class UpdateController extends Notifier<UpdateState> {
 
   // ---- internals ----
 
+  /// Writes state only while the provider is alive. A download can outlive a
+  /// disposed provider (test teardown, hot restart); touching `state` then
+  /// would throw.
+  void _emit(UpdateState next) {
+    if (ref.mounted) state = next;
+  }
+
   Future<void> _downloadInBackground() async {
     if (_downloading) return;
     final release = state.release;
@@ -224,27 +231,30 @@ class UpdateController extends Notifier<UpdateState> {
         apk: apk,
         checksum: checksum,
       );
+      if (!ref.mounted) return;
       _stored = stored;
-      state = UpdateMachine.withTarget(
-        state,
-        target: UpdateTarget(apk: apk, checksum: checksum),
-        existingBytes: stored.existingBytes,
+      _emit(
+        UpdateMachine.withTarget(
+          state,
+          target: UpdateTarget(apk: apk, checksum: checksum),
+          existingBytes: stored.existingBytes,
+        ),
       );
       await downloader.download(
         url: Uri.parse(stored.url),
         file: stored.apkFile,
         cancelToken: token,
         onProgress: (received, total) =>
-            state = UpdateMachine.onProgress(state, received, total),
+            _emit(UpdateMachine.onProgress(state, received, total)),
       );
     } on UpdateDownloadException catch (error) {
       if (!_cancelled) {
-        state = UpdateMachine.onError(state, error.message);
+        _emit(UpdateMachine.onError(state, error.message));
       }
       return;
     } catch (_) {
       if (!_cancelled) {
-        state = UpdateMachine.onError(state, 'دانلود انجام نشد.');
+        _emit(UpdateMachine.onError(state, 'دانلود انجام نشد.'));
       }
       return;
     } finally {
@@ -252,7 +262,7 @@ class UpdateController extends Notifier<UpdateState> {
       _downloading = false;
     }
 
-    if (_cancelled) return;
+    if (_cancelled || !ref.mounted) return;
     await _verify(stored, downloader, storage);
   }
 
@@ -264,9 +274,11 @@ class UpdateController extends Notifier<UpdateState> {
     if (stored.checksumUrl.isEmpty) {
       await storage.deleteAll();
       _stored = null;
-      state = UpdateMachine.onError(
-        state,
-        'فایل «بررسی سالم بودن» در این نسخه نبود. نصب انجام نشد.',
+      _emit(
+        UpdateMachine.onError(
+          state,
+          'فایل «بررسی سالم بودن» در این نسخه نبود. نصب انجام نشد.',
+        ),
       );
       return;
     }
@@ -274,9 +286,8 @@ class UpdateController extends Notifier<UpdateState> {
     try {
       expected = await downloader.fetchChecksum(Uri.parse(stored.checksumUrl));
     } catch (_) {
-      state = UpdateMachine.onError(
-        state,
-        'سالم بودن فایل بررسی نشد. دوباره تلاش کن.',
+      _emit(
+        UpdateMachine.onError(state, 'سالم بودن فایل بررسی نشد. دوباره تلاش کن.'),
       );
       return;
     }
@@ -284,16 +295,18 @@ class UpdateController extends Notifier<UpdateState> {
     if (!checksumMatches(actual, expected)) {
       await storage.deleteAll();
       _stored = null;
-      state = UpdateMachine.onError(
-        state,
-        'فایل دانلود‌شده سالم نبود. دوباره تلاش کن.',
+      _emit(
+        UpdateMachine.onError(
+          state,
+          'فایل دانلود‌شده سالم نبود. دوباره تلاش کن.',
+        ),
       );
       return;
     }
     await storage.markVerified(stored, expected);
     // Re-read so the in-memory handle carries complete=true and the hash.
     _stored = await storage.loadPending() ?? stored;
-    state = UpdateMachine.onDownloaded(state);
+    _emit(UpdateMachine.onDownloaded(state));
   }
 
   Future<void> _reconcileInstalled() async {
