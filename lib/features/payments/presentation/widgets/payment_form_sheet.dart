@@ -264,7 +264,7 @@ class _PaymentFormSheetState extends ConsumerState<PaymentFormSheet> {
                   Expanded(
                     child: Text(
                       formatJalaliFullLong(_date),
-                      textAlign: TextAlign.left,
+                      textAlign: TextAlign.end,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,

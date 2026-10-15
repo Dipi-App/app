@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/widgets/floating_nav_bar.dart';
+import '../features/app_update/presentation/widgets/update_host.dart';
 import '../features/backup/presentation/widgets/backup_reminder_banner.dart';
 import '../features/calendar/presentation/calendar_page.dart';
 import '../features/calendar/presentation/widgets/work_entry_form_sheet.dart';
@@ -103,6 +104,7 @@ class _HomeShellState extends State<HomeShell>
       extendBody: true,
       body: Column(
         children: [
+          const UpdateHost(),
           const BackupReminderBanner(),
           Expanded(
             child: FadeTransition(

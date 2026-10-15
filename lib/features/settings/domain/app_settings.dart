@@ -17,6 +17,8 @@ class AppSettings {
     this.onboardingSeen = false,
     this.voiceHintsEnabled = true,
     this.coachMarksSeen = const {},
+    this.autoUpdateWifiOnly = true,
+    this.lastUpdateCheckAt,
   });
 
   final CurrencyUnit currencyUnit;
@@ -40,6 +42,16 @@ class AppSettings {
   /// Ids of the one-time coach-mark tips the user has already seen.
   final Set<String> coachMarksSeen;
 
+  /// Whether a new-version APK may auto-download on Wi-Fi only (default on).
+  final bool autoUpdateWifiOnly;
+
+  /// ISO time of the last successful update check, for the 6-hour limit.
+  final String? lastUpdateCheckAt;
+
+  DateTime? get lastUpdateCheckDate => lastUpdateCheckAt == null
+      ? null
+      : DateTime.tryParse(lastUpdateCheckAt!);
+
   DateTime? get lastBackupDate =>
       lastBackupAt == null ? null : DateTime.tryParse(lastBackupAt!);
 
@@ -62,6 +74,8 @@ class AppSettings {
     bool? onboardingSeen,
     bool? voiceHintsEnabled,
     Set<String>? coachMarksSeen,
+    bool? autoUpdateWifiOnly,
+    String? lastUpdateCheckAt,
   }) {
     return AppSettings(
       currencyUnit: currencyUnit ?? this.currencyUnit,
@@ -81,6 +95,8 @@ class AppSettings {
       onboardingSeen: onboardingSeen ?? this.onboardingSeen,
       voiceHintsEnabled: voiceHintsEnabled ?? this.voiceHintsEnabled,
       coachMarksSeen: coachMarksSeen ?? this.coachMarksSeen,
+      autoUpdateWifiOnly: autoUpdateWifiOnly ?? this.autoUpdateWifiOnly,
+      lastUpdateCheckAt: lastUpdateCheckAt ?? this.lastUpdateCheckAt,
     );
   }
 
@@ -99,6 +115,8 @@ class AppSettings {
     'onboardingSeen': onboardingSeen.toString(),
     'voiceHintsEnabled': voiceHintsEnabled.toString(),
     'coachMarksSeen': coachMarksSeen.join(','),
+    'autoUpdateWifiOnly': autoUpdateWifiOnly.toString(),
+    'lastUpdateCheckAt': lastUpdateCheckAt ?? '',
   };
 
   static AppSettings fromMap(Map<String, String?> map) {
@@ -125,6 +143,8 @@ class AppSettings {
           .split(',')
           .where((id) => id.isNotEmpty)
           .toSet(),
+      autoUpdateWifiOnly: map['autoUpdateWifiOnly'] != 'false',
+      lastUpdateCheckAt: nonEmpty('lastUpdateCheckAt'),
     );
   }
 }

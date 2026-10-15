@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' show Value;
 
+import '../../../../core/constants/work_defaults.dart';
 import '../../../../core/help/coach_mark.dart';
 import '../../../../core/help/help_content.dart';
 import '../../../../core/help/help_page.dart';
@@ -79,8 +80,11 @@ class _WorkEntryFormSheetState extends ConsumerState<WorkEntryFormSheet> {
     _note = TextEditingController(text: entry?.note ?? '');
     _employerId = entry?.employerId ?? widget.initialEmployerId;
     _date = tryParseIsoDate(entry?.date ?? widget.initialDate) ?? dateOnly(DateTime.now());
-    _start = decodeClock(entry?.startTime);
-    _end = decodeClock(entry?.endTime);
+    // Editing keeps the saved times; a new workday starts at the defaults.
+    _start = _isEditing
+        ? decodeClock(entry?.startTime)
+        : WorkDefaults.startTime;
+    _end = _isEditing ? decodeClock(entry?.endTime) : WorkDefaults.endTime;
     _wageType = WageType.fromName(entry?.wageType);
     _wageRial = entry?.wageAmount;
     _outOfPocketRial = entry != null && entry.outOfPocketAmount > 0
@@ -327,6 +331,13 @@ class _WorkEntryFormSheetState extends ConsumerState<WorkEntryFormSheet> {
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          Text(
+            WorkDefaults.timeHint,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
           if (duration != null) ...[
             const SizedBox(height: 8),
             Row(
@@ -483,7 +494,7 @@ class _PickerTile extends StatelessWidget {
             Expanded(
               child: Text(
                 value,
-                textAlign: TextAlign.left,
+                textAlign: TextAlign.end,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,

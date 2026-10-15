@@ -1,7 +1,7 @@
 # AGENTS.md — Dipi (دیپی)
 
 Offline Persian (RTL) Flutter app for Android. Workers log workdays and payments.
-See `START.md` for the full product brief and the step-by-step delivery plan.
+See `README.md` for the product overview and `docs/RELEASE.md` for releasing.
 
 ## Environment notes (this machine)
 

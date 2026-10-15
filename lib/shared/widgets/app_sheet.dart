@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 
+/// How many app sheets (forms, pickers, help) are open right now.
+///
+/// The update flow watches this so it never pops its modal on top of a form
+/// the user is filling in.
+final ValueNotifier<int> appSheetDepth = ValueNotifier<int>(0);
+
 Future<T?> showAppSheet<T>(
   BuildContext context, {
   required Widget child,
@@ -7,6 +13,7 @@ Future<T?> showAppSheet<T>(
   bool enableDrag = true,
   double heightFactor = 0.88,
 }) {
+  appSheetDepth.value++;
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
@@ -24,7 +31,9 @@ Future<T?> showAppSheet<T>(
       ),
       child: child,
     ),
-  );
+  ).whenComplete(() {
+    appSheetDepth.value--;
+  });
 }
 
 class AppSheet extends StatelessWidget {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../shared/widgets/app_sheet.dart';
+import '../widgets/directional_icons.dart';
 import 'help_content.dart';
 import 'voice_hints.dart';
 
@@ -68,7 +69,7 @@ class _HelpCard extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.chevron_left_rounded,
+                DirectionalIcons.forward,
                 color: theme.colorScheme.outline,
               ),
             ],

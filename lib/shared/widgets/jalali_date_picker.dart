@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/utils/jalali_utils.dart';
 import '../../core/utils/persian_digits.dart';
+import '../../core/widgets/directional_icons.dart';
 
 Future<DateTime?> showJalaliDatePicker(
   BuildContext context, {
@@ -74,7 +75,7 @@ class _JalaliDatePickerDialogState extends State<_JalaliDatePickerDialog> {
                 IconButton(
                   onPressed: () =>
                       setState(() => _month = previousJalaliMonth(_month)),
-                  icon: const Icon(Icons.chevron_right_rounded),
+                  icon: const Icon(DirectionalIcons.back),
                   tooltip: 'ماه قبل',
                 ),
                 Expanded(
@@ -89,7 +90,7 @@ class _JalaliDatePickerDialogState extends State<_JalaliDatePickerDialog> {
                 IconButton(
                   onPressed: () =>
                       setState(() => _month = nextJalaliMonth(_month)),
-                  icon: const Icon(Icons.chevron_left_rounded),
+                  icon: const Icon(DirectionalIcons.forward),
                   tooltip: 'ماه بعد',
                 ),
               ],

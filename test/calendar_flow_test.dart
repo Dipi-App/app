@@ -74,7 +74,7 @@ void main() {
 
   tearDown(() => database.close());
 
-  testWidgets('tapping a day opens the day sheet with its entries', (
+  testWidgets('tapping a day shows its details in the card below', (
     tester,
   ) async {
     final employerId = await employers.create(
@@ -122,7 +122,8 @@ void main() {
     await tester.tap(_todayCell());
     await _settle(tester);
 
-    await tester.tap(find.text('افزودن روزکار'));
+    // The center "روزکار" action of the floating bar always opens the form.
+    await tester.tap(find.text('روزکار'));
     await _settle(tester);
     expect(find.text('روزکار تازه'), findsOneWidget);
     expect(find.text(formatJalaliFullLong(DateTime.now())), findsWidgets);

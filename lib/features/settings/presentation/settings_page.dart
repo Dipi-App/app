@@ -5,6 +5,7 @@ import '../../../core/constants/app_info.dart';
 import '../../../core/help/help_page.dart';
 import '../../../core/providers/app_info_providers.dart';
 import '../../../core/utils/jalali_utils.dart';
+import '../../../core/widgets/directional_icons.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/persian_digits.dart';
 import '../../../core/utils/pin_hash.dart';
@@ -12,6 +13,10 @@ import '../../../domain/enums.dart';
 import '../../../shared/widgets/app_dialogs.dart';
 import '../../../shared/branding/dipi_logo.dart';
 import '../../../shared/widgets/section_card.dart';
+import '../../app_update/domain/update_phase.dart';
+import '../../app_update/presentation/update_sheet.dart';
+import '../../app_update/state/update_controller.dart';
+import '../../app_update/state/update_providers.dart';
 import '../../backup/presentation/backup_page.dart';
 import '../../export/presentation/export_page.dart';
 import '../../lock/presentation/pin_dialogs.dart';
@@ -111,7 +116,7 @@ class SettingsPage extends ConsumerWidget {
                         : 'آخرین پشتیبان: '
                               '${formatJalaliShort(settings.lastBackupDate!)}',
                   ),
-                  trailing: const Icon(Icons.chevron_left_rounded),
+                  trailing: const Icon(DirectionalIcons.forward),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const BackupPage(),
@@ -124,7 +129,7 @@ class SettingsPage extends ConsumerWidget {
                   leading: const Icon(Icons.description_outlined),
                   title: const Text('خروجی گرفتن (txt / md / docx)'),
                   subtitle: const Text('گزارش روزکار و حساب برای بازه دلخواه'),
-                  trailing: const Icon(Icons.chevron_left_rounded),
+                  trailing: const Icon(DirectionalIcons.forward),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const ExportPage(),
@@ -146,7 +151,7 @@ class SettingsPage extends ConsumerWidget {
                   leading: const Icon(Icons.school_outlined),
                   title: const Text('آموزش اولیه'),
                   subtitle: const Text('دوباره این چند اسلاید ساده را ببین'),
-                  trailing: const Icon(Icons.chevron_left_rounded),
+                  trailing: const Icon(DirectionalIcons.forward),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const OnboardingPage(),
@@ -159,7 +164,7 @@ class SettingsPage extends ConsumerWidget {
                   leading: const Icon(Icons.menu_book_outlined),
                   title: const Text('راهنمای کار با دیپی'),
                   subtitle: const Text('ثبت روزکار، پرداخت، حساب، پشتیبان و خروجی'),
-                  trailing: const Icon(Icons.chevron_left_rounded),
+                  trailing: const Icon(DirectionalIcons.forward),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(builder: (_) => const HelpPage()),
                   ),
@@ -218,12 +223,79 @@ class SettingsPage extends ConsumerWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                const _UpdateSection(),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+}
+
+class _UpdateSection extends ConsumerWidget {
+  const _UpdateSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final autoWifiOnly = ref.watch(settingsValueProvider).autoUpdateWifiOnly;
+    final settingsController = ref.read(settingsControllerProvider.notifier);
+    final phase = ref.watch(updateControllerProvider.select((s) => s.phase));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Divider(),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          value: autoWifiOnly,
+          onChanged: settingsController.setAutoUpdateWifiOnly,
+          title: const Text('دانلود خودکار فقط با Wi-Fi'),
+          subtitle: const Text(
+            'اگر خاموش باشد، روی اینترنت موبایل هم خودش دانلود می‌کند.',
+          ),
+        ),
+        const Divider(),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.system_update_alt_rounded),
+          title: const Text('بررسی نسخه جدید'),
+          subtitle: Text(_statusText(phase)),
+          trailing: const Icon(DirectionalIcons.forward),
+          onTap: () => _check(context, ref),
+        ),
+      ],
+    );
+  }
+
+  String _statusText(UpdatePhase phase) => switch (phase) {
+    UpdatePhase.ready => 'نسخه جدید آماده نصب است',
+    UpdatePhase.downloading => 'در حال دانلود نسخه جدید',
+    UpdatePhase.available => 'نسخه جدید هست',
+    UpdatePhase.error => 'دانلود نسخه جدید ناموفق بود',
+    UpdatePhase.hidden => 'از گیت‌هاب بررسی می‌شود',
+  };
+
+  Future<void> _check(BuildContext context, WidgetRef ref) async {
+    final controller = ref.read(updateControllerProvider.notifier);
+    final outcome = await controller.checkForUpdates(manual: true);
+    if (!context.mounted) return;
+    switch (outcome) {
+      case CheckOutcome.found:
+        await showUpdateSheet(context);
+      case CheckOutcome.upToDate:
+        showInfoSnackBar(context, 'نسخه شما به‌روز است.');
+      case CheckOutcome.busy:
+        showInfoSnackBar(context, 'همین حالا مشغول دانلود است.');
+      case CheckOutcome.skipped:
+      case CheckOutcome.offLine:
+      case CheckOutcome.rateLimited:
+        showInfoSnackBar(
+          context,
+          'بررسی انجام نشد. اینترنت را بررسی کن و دوباره بزن.',
+        );
+    }
   }
 }
 
@@ -298,7 +370,7 @@ class _SecurityCard extends ConsumerWidget {
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.password_rounded),
               title: const Text('تغییر رمز'),
-              trailing: const Icon(Icons.chevron_left_rounded),
+              trailing: const Icon(DirectionalIcons.forward),
               onTap: changePin,
             ),
             const Divider(),

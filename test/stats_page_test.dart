@@ -5,9 +5,9 @@ import 'package:dipi/data/db/employer_dao.dart';
 import 'package:dipi/data/db/payment_dao.dart';
 import 'package:dipi/data/db/work_entry_dao.dart';
 import 'package:dipi/features/stats/presentation/stats_page.dart';
+import 'package:dipi/shared/widgets/simple_bar_chart.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -94,7 +94,7 @@ void main() {
     expect(find.text('جمع بازه'), findsOneWidget);
     expect(find.text('نمودار ماهانه'), findsOneWidget);
     expect(find.text('به تفکیک کارفرما'), findsOneWidget);
-    expect(find.byType(BarChart), findsOneWidget);
+    expect(find.byType(SimpleBarChart), findsOneWidget);
 
     // 5,000,000 − 2,000,000 = 3,000,000 Rial = 300,000 Toman outstanding.
     expect(find.text('طلب شما'), findsWidgets);

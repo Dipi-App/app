@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 import '../../../../core/utils/jalali_utils.dart';
 import '../../../../core/utils/persian_digits.dart';
 
+/// One day in the month grid.
+///
+/// * A worked day is filled with the employer's colour (the first one).
+/// * A day with more than one employer shows small coloured dots.
+/// * Today gets a clear gold ring; the selected day gets a solid fill.
+/// * Days with no work keep the plain surface colour.
 class DayCell extends StatelessWidget {
   const DayCell({
     super.key,
@@ -19,40 +25,35 @@ class DayCell extends StatelessWidget {
   final bool hasPending;
   final VoidCallback? onTap;
 
-  static const double _size = 38;
+  static const double _size = 36;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final today = isToday(day);
     final j = toJalali(day);
-    final filled = colors.isNotEmpty;
+    final worked = colors.isNotEmpty;
 
-    final Color? background = colors.length == 1 ? Color(colors.first) : null;
-    final Gradient? gradient = colors.length > 1
-        ? _splitGradient(colors)
-        : null;
+    final fill = selected
+        ? scheme.primary
+        : (worked ? Color(colors.first) : null);
+    final foreground = selected
+        ? scheme.onPrimary
+        : (worked ? Colors.white : scheme.onSurface);
 
-    final Color foreground = filled
-        ? Colors.white
-        : theme.colorScheme.onSurface;
-
-    final border = selected
-        ? Border.all(color: theme.colorScheme.primary, width: 2)
-        : today
-        ? Border.all(
-            color: theme.colorScheme.primary.withValues(alpha: 0.75),
-            width: 1.4,
-          )
+    final Border? border = today
+        ? Border.all(color: scheme.secondary, width: 2)
         : null;
 
     return Semantics(
-      label: '${toPersianDigits(j.day)} ${jalaliMonthNames[j.month - 1]}',
+      label: '${toPersianDigits(j.day)} ${jalaliMonthNames[j.month - 1]}'
+          '${worked ? '، روز کاری' : ''}${today ? '، امروز' : ''}',
       selected: selected,
       button: true,
       child: InkResponse(
         onTap: onTap,
-        radius: _size * 0.72,
+        radius: _size * 0.8,
         child: Center(
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
@@ -60,36 +61,60 @@ class DayCell extends StatelessWidget {
             width: _size,
             height: _size,
             decoration: BoxDecoration(
-              color: background,
-              gradient: gradient,
+              color: fill,
               shape: BoxShape.circle,
               border: border,
             ),
-            alignment: Alignment.center,
             child: Stack(
-              clipBehavior: Clip.none,
               alignment: Alignment.center,
+              clipBehavior: Clip.none,
               children: [
-                Text(
-                  toPersianDigits(j.day),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: foreground,
-                    fontWeight: filled || today
-                        ? FontWeight.w700
-                        : FontWeight.w400,
+                Padding(
+                  padding: EdgeInsets.only(bottom: colors.length > 1 ? 9 : 0),
+                  child: Text(
+                    toPersianDigits(j.day),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: foreground,
+                      fontWeight: worked || today || selected
+                          ? FontWeight.w700
+                          : FontWeight.w400,
+                    ),
                   ),
                 ),
+                if (colors.length > 1)
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 3),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final color in colors.take(3))
+                            Container(
+                              width: 5,
+                              height: 5,
+                              margin: const EdgeInsets.symmetric(horizontal: 1),
+                              decoration: BoxDecoration(
+                                color: Color(color),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: scheme.surface, width: 1),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                 if (hasPending)
                   Positioned(
-                    bottom: -1,
+                    top: -2,
+                    right: -2,
                     child: Container(
-                      width: 5,
-                      height: 5,
+                      width: 8,
+                      height: 8,
                       decoration: BoxDecoration(
-                        color: filled
-                            ? Colors.white
-                            : theme.colorScheme.tertiary,
+                        color: scheme.tertiary,
                         shape: BoxShape.circle,
+                        border: Border.all(color: scheme.surface, width: 1.5),
                       ),
                     ),
                   ),
@@ -98,30 +123,6 @@ class DayCell extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  LinearGradient _splitGradient(List<int> colors) {
-    final taken = colors.take(4).toList();
-    if (taken.length == 1) {
-      return LinearGradient(colors: [Color(taken.first), Color(taken.first)]);
-    }
-    final step = 1 / taken.length;
-    final stops = <double>[];
-    final gradientColors = <Color>[];
-    for (var i = 0; i < taken.length; i++) {
-      stops
-        ..add(i * step)
-        ..add((i + 1) * step);
-      gradientColors
-        ..add(Color(taken[i]))
-        ..add(Color(taken[i]));
-    }
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: gradientColors,
-      stops: stops,
     );
   }
 }

@@ -89,8 +89,9 @@ void main() {
     await tester.tap(find.text('آمار').hitTestable());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
-    expect(find.text('جمع بازه'), findsOneWidget);
-    expect(find.text('نمودار ماهانه'), findsOneWidget);
+    // With no data yet, stats shows its friendly empty state.
+    expect(find.text('در این بازه داده‌ای نیست'), findsOneWidget);
+    expect(find.text('ثبت روزکار'), findsOneWidget);
 
     await _disposeApp(tester);
   });

@@ -52,6 +52,28 @@ jobs:
           chmod +x scripts/bump_version.sh
           scripts/bump_version.sh "${{ github.event.inputs.bump || 'auto' }}"
 
+      - name: Verify build number increased
+        # Every release needs a versionCode higher than the last one, or Android
+        # would refuse the in-app update. The bump script increments it; this
+        # guard fails loudly if that ever stops happening.
+        if: steps.version.outputs.released == 'true'
+        run: |
+          new_full=$(grep -E '^version:' pubspec.yaml | head -1 | awk '{print $2}')
+          new_build="${new_full##*+}"
+          prev_tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
+          prev_build=0
+          if [ -n "$prev_tag" ]; then
+            prev_full=$(git show "${prev_tag}:pubspec.yaml" 2>/dev/null | grep -E '^version:' | head -1 | awk '{print $2}')
+            if printf '%s' "$prev_full" | grep -q '+'; then
+              prev_build="${prev_full##*+}"
+            fi
+          fi
+          if [ "$new_build" -le "$prev_build" ]; then
+            echo "::error::Build number did not increase ($prev_build -> $new_build)."
+            exit 1
+          fi
+          echo "Build number $prev_build -> $new_build"
+
       - name: Commit and tag the release
         if: steps.version.outputs.released == 'true'
         run: |
@@ -77,23 +99,25 @@ jobs:
         # CI falls back to Flutter's default NDK, which the runner installs.
         run: sed -i 's/^dipiNdkVersion=.*/dipiNdkVersion=/' android/gradle.properties
 
-      - name: Configure release signing (optional)
+      - name: Configure release signing
+        # A shared keystore is mandatory: Android only updates an app when the
+        # new APK is signed with the same key as the installed one.
         if: steps.version.outputs.released == 'true'
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
-            cat > android/key.properties <<EOF
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::KEYSTORE_BASE64 is not set. Add the four signing secrets so every release shares one signature (in-app update needs this)."
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          cat > android/key.properties <<EOF
           storeFile=upload-keystore.jks
           storePassword=${{ secrets.KEYSTORE_PASSWORD }}
           keyAlias=${{ secrets.KEY_ALIAS }}
           keyPassword=${{ secrets.KEY_PASSWORD }}
           EOF
-            echo "Release keystore configured."
-          else
-            echo "::warning::No KEYSTORE_BASE64 secret set — APK will be signed with the debug keys. Add the four signing secrets for a properly signed release."
-          fi
+          echo "Release keystore configured."
 
       - name: Build split-per-ABI release APKs
         if: steps.version.outputs.released == 'true'
@@ -116,20 +140,46 @@ jobs:
           done
           ls -l dist
 
+      - name: Compute SHA-256 checksums
+        # One `<hash>  <filename>` file per APK. The app verifies the download
+        # against these before it will install anything.
+        if: steps.version.outputs.released == 'true'
+        run: |
+          cd dist
+          for f in *.apk; do
+            sha256sum "$f" > "$f.sha256"
+          done
+          cat *.sha256
+
+      - name: Prepare release notes
+        # The newest CHANGELOG section, built from Conventional Commits by
+        # scripts/bump_version.sh.
+        if: steps.version.outputs.released == 'true'
+        run: |
+          awk '/^# /{c++} c==1' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            git log -1 --pretty=format:'%s' > release-notes.md
+          fi
+          echo "----- release-notes.md -----"
+          cat release-notes.md
+
       - name: Upload APKs as workflow artifacts
         if: steps.version.outputs.released == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: dipi-v${{ steps.version.outputs.version }}
-          path: dist/*.apk
+          path: |
+            dist/*.apk
+            dist/*.sha256
           if-no-files-found: error
 
-      - name: Create GitHub Release with the APKs
+      - name: Create GitHub Release with the APKs and checksums
         if: steps.version.outputs.released == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
             dist/*.apk \
+            dist/*.sha256 \
             --title "دیپی ${{ steps.version.outputs.version }}" \
-            --generate-notes
+            --notes-file release-notes.md

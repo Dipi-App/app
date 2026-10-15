@@ -15,44 +15,60 @@
   </a>
 </p>
 
-۱. روی دکمه **دانلود** بالا بزن و از صفحه‌ی Releases آخرین فایل را بگیر.
-   برای بیشتر گوشی‌ها فایل `dipi-vX.Y.Z-arm64-v8a.apk` مناسب است.
-۲. فایل دانلود‌شده را در گوشی باز کن.
-۳. اگر گوشی پیام داد، در تنظیمات اجازه‌ی **نصب از منابع ناشناس** را برای
-   برنامه‌ی فایل‌ها روشن کن (گوشی‌های جدید معمولاً خودشان راهنمایی می‌کنند).
-۴. «نصب» را بزن. تمام! دیپی بدون اینترنت کار می‌کند.
+۱. روی دکمه **دانلود** بالا بزن. صفحه‌ی Releases باز می‌شود و همیشه فایل‌های
+   **آخرین نسخه** آنجا هستند (هر نسخه با شماره‌ی خودش).
+۲. **کدام فایل؟** برای بیشتر گوشی‌ها فایل `universal` را بردار؛ روی همه‌ی
+   گوشی‌ها نصب می‌شود. اگر فایل سبک‌تر می‌خواهی، `arm64-v8a` برای تقریباً همه‌ی
+   گوشی‌های جدید مناسب است.
+۳. فایل دانلود‌شده را در گوشی باز کن.
+۴. اگر گوشی پیام داد، اجازه‌ی **نصب از منابع ناشناس** را برای برنامه‌ی
+   فایل‌ها روشن کن (گوشی‌های جدید معمولاً خودشان راهنمایی می‌کنند).
+۵. «نصب» را بزن. تمام! دیپی بدون اینترنت کار می‌کند.
 
-> فایل `dipi-vX.Y.Z-universal.apk` برای همه‌ی گوشی‌ها کار می‌کند و کمی
-> حجیم‌تر است. بقیه‌ی فایل‌ها سبک‌ترند و مخصوص یک نوع پردازنده هستند.
+> روی صفحه‌ی Releases نام فایل‌ها با شماره‌ی نسخه عوض می‌شود؛ فقط آخرین نسخه را
+> بردار. هیچ لینکی به یک نام فایل ثابت داده نشده، چون با هر نسخه عوض می‌شود.
 
 ## Download & install (English)
 
-1. Tap the **Download** button above and grab the latest APK from the Releases
-   page. Most phones want `dipi-vX.Y.Z-arm64-v8a.apk`.
-2. Open the downloaded file on the phone.
-3. If Android asks, allow **installing from unknown sources** for your file
+1. Tap the **Download** button above; the Releases page always holds the
+   **latest** files (each version is named after its number).
+2. **Which file?** Take the `universal` APK — it installs on any phone. Want a
+   smaller file? `arm64-v8a` fits almost every modern phone.
+3. Open the downloaded file on the phone.
+4. If Android asks, allow **installing from unknown sources** for your file
    manager (newer Android shows a one-tap guide).
-4. Tap **Install**. Done — Dipi works with no internet connection.
+5. Tap **Install**. Done — Dipi works with no internet connection.
 
-`dipi-vX.Y.Z-universal.apk` runs on any phone and is a bit larger; the per-ABI
-APKs are smaller and faster.
+There is no link to a fixed file name on purpose: the APK name changes with
+every version, so always download the newest one from the Releases page.
 
 ## Features
 
-- **Calendar** — Jalali month grid, swipe to change month, each day coloured
-  with the employer's colour, a dot for unknown wages, and a month summary.
+- **Calendar** — the Jalali month grid sits in a rounded card: worked days are
+  filled with the employer's colour, a day with several employers shows small
+  dots, today has a gold ring and the selected day a solid fill. A card below the
+  calendar shows the selected day (employer, place, job, times, wage, expense,
+  note) with big Edit/Delete buttons, or a friendly "add workday" card if empty.
 - **Employers** — add/edit (name, colour, phone, note, default wage),
   archive/restore, delete, and a detail page with totals.
-- **Work entries** — employer, place, job, times (cross-midnight shifts),
-  fixed/variable wage, out-of-pocket money and a note; smart defaults (today,
-  last employer, last place/job).
-- **Payments** — wage, advance and expense-refund payments with filters and a
-  whole-ledger balance summary.
-- **Settlement & stats** — per employer and per range: wages, out-of-pocket,
-  received, balance, a monthly chart and a per-employer breakdown.
+- **Work entries** — employer, place, job, times (a new workday starts at
+  08:00–17:00; cross-midnight shifts are supported), fixed/variable wage,
+  out-of-pocket money and a note; smart defaults (today, last employer, last
+  place/job).
+- **Payments** — one clean card per payment (employer colour + name, big bold
+  amount, date and a one-line note, a type icon), grouped by Jalali month with a
+  sticky header and month total. Filter by employer, type and date range, swipe
+  to delete with confirm + undo, and a running total-received / balance summary.
+- **Settlement & stats** — big summary cards (workdays, wage, received, the
+  balance as "طلب شما" / "بدهی شما" with an icon, and money to claim back), a
+  simple monthly bar chart with the value written on each bar, and one card per
+  employer. A "?" opens a short guide.
 - **Backup & export** — one JSON file, local or Google Drive (`drive.appdata`),
   and txt/md/docx export that stays right-to-left.
 - **App lock** — optional 4–8 digit PIN (salted SHA-256) with fingerprint.
+- **Auto-update** — the app checks the latest GitHub release and installs a
+  verified, ABI-matched APK in place (same signer, data kept); see
+  [`docs/auto-update.md`](docs/auto-update.md).
 - **Made for low literacy** — big icons and short Persian labels everywhere, a
   floating bottom bar with a large "add workday" center button, first-run
   onboarding, contextual "?" guides, one-time coach marks and optional spoken
@@ -140,12 +156,12 @@ lib/
   app.dart                     MaterialApp: locale fa, RTL, themes, AppGate
   main.dart                    ProviderScope + runApp
   core/
-    constants/app_info.dart    name, tagline, version, backup file names
+    constants/                 app_info, work_defaults (08:00–17:00)
     help/                      help text, help screen, coach marks, voice hints
     providers/                 database + DAO + app-info providers
     theme/                     brand colour scheme, tokens, employer palette
     utils/                     persian_digits, jalali_utils, money, time_utils
-    widgets/                   floating navigation bar
+    widgets/                   floating nav bar, shared header, directional icons
   data/db/                     drift tables, database, generated code, DAOs
   domain/                      enums, balance rule, entry statistics
   features/<feature>/          domain / presentation / state

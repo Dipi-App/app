@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/help/help_page.dart';
 import '../../../core/theme/app_tokens.dart';
+import '../../../core/widgets/directional_icons.dart';
+import '../../../core/widgets/dipi_header.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/persian_digits.dart';
 import '../../../data/db/app_database.dart';
@@ -11,6 +13,7 @@ import '../../../domain/enums.dart';
 import '../../../shared/utils/motion.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/settings_button.dart';
+import '../../app_update/presentation/widgets/update_header_button.dart';
 import '../../settings/state/settings_providers.dart';
 import '../state/employer_providers.dart';
 import 'employer_detail_page.dart';
@@ -95,8 +98,9 @@ class _EmployersPageState extends ConsumerState<EmployersPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_showArchived ? 'کارفرماهای بایگانی' : 'کارفرماها'),
+      appBar: DipiHeader(
+        title: _showArchived ? 'کارفرماهای بایگانی' : 'کارفرماها',
+        updateAction: const UpdateHeaderButton(),
         actions: [
           IconButton(
             onPressed: () => setState(() => _showArchived = !_showArchived),
@@ -200,7 +204,7 @@ class _EmployerTile extends ConsumerWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_left_rounded, color: theme.colorScheme.outline),
+              Icon(DirectionalIcons.forward, color: theme.colorScheme.outline),
             ],
           ),
         ),

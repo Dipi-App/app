@@ -138,7 +138,7 @@ class _FloatingNavBarState extends State<FloatingNavBar>
     final scheme = theme.colorScheme;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
-    return Padding(
+    final bar = Padding(
       padding: EdgeInsets.fromLTRB(
         AppTokens.navMargin,
         AppTokens.space8,
@@ -184,8 +184,8 @@ class _FloatingNavBarState extends State<FloatingNavBar>
                     builder: (context, _) {
                       return Positioned(
                         left: leftForSlot(_slotAnimation.value),
-                        top: AppTokens.space4,
-                        bottom: AppTokens.space4,
+                        top: AppTokens.navInnerPadding,
+                        bottom: AppTokens.navInnerPadding,
                         width: pillWidth,
                         child: IgnorePointer(
                           child: DecoratedBox(
@@ -212,6 +212,13 @@ class _FloatingNavBarState extends State<FloatingNavBar>
           ),
         ),
       ),
+    );
+
+    // Clamp the text scale a little so a huge system font can never overflow
+    // the fixed-height bar (the labels stay readable, just not enormous).
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.3,
+      child: bar,
     );
   }
 

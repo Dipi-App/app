@@ -26,8 +26,15 @@ abstract final class AppTokens {
   static const double comfortableTapTarget = 56;
 
   // The floating navigation bar geometry.
-  static const double navMargin = 16;
-  static const double navHeight = 72;
+  //
+  // Outer margin from the screen edges / bottom (12–16) plus the system safe
+  // area; inner padding inside the bar (8–12) around the item content.
+  static const double navMargin = 14;
+  static const double navInnerPadding = 8;
+
+  /// Total bar height: a 56-item plus the inner padding on both sides.
+  static const double navHeight =
+      comfortableTapTarget + 2 * navInnerPadding;
 
   /// Bottom padding screens must add to their scroll area so content never
   /// hides behind the floating navigation bar or the system gesture bar.

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/database_providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/jalali_utils.dart';
+import '../../../core/widgets/directional_icons.dart';
 import '../../../core/utils/persian_digits.dart';
 import '../../../core/utils/time_utils.dart';
 import '../../../data/db/app_database.dart';
@@ -392,7 +393,7 @@ class _BalanceCard extends StatelessWidget {
                       color: color,
                     ),
                   ),
-                  Icon(Icons.chevron_left_rounded, color: color),
+                  Icon(DirectionalIcons.forward, color: color),
                 ],
               ),
             ],

@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/help/help_page.dart';
 import '../../../core/providers/database_providers.dart';
 import '../../../core/theme/app_tokens.dart';
+import '../../../core/utils/jalali_utils.dart';
 import '../../../core/utils/persian_digits.dart';
+import '../../../core/widgets/dipi_header.dart';
 import '../../../data/db/app_database.dart';
 import '../../../domain/enums.dart';
-import '../../../shared/utils/motion.dart';
 import '../../../shared/widgets/app_dialogs.dart';
 import '../../../shared/widgets/balance_chip.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/jalali_date_picker.dart';
 import '../../../shared/widgets/money_text.dart';
 import '../../../shared/widgets/settings_button.dart';
+import '../../app_update/presentation/widgets/update_header_button.dart';
 import '../../employers/state/employer_providers.dart';
 import '../state/payment_providers.dart';
 import 'widgets/payment_form_sheet.dart';
@@ -25,127 +27,130 @@ class PaymentsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncPayments = ref.watch(allPaymentsProvider);
-    final payments = ref.watch(filteredPaymentsProvider);
+    final groups = ref.watch(filteredPaymentGroupsProvider);
     final employers = ref.watch(employersByIdProvider);
     final activeEmployers = ref.watch(activeEmployersProvider);
     final filter = ref.watch(paymentsFilterProvider);
     final controller = ref.read(paymentsFilterProvider.notifier);
-    final overallBalance = ref.watch(overallBalanceProvider);
-    final reduced = reduceMotion(context);
-    final theme = Theme.of(context);
+    final total = ref.watch(filteredPaymentsTotalProvider);
+    final balance = ref.watch(overallBalanceProvider);
 
     final Widget body;
-    if (asyncPayments.value == null) {
-      body = asyncPayments.hasError
-          ? EmptyState(
-              icon: Icons.error_outline_rounded,
-              title: 'خواندن پرداخت‌ها ناموفق بود',
-              message: '${asyncPayments.error}',
-              action: FilledButton.tonal(
-                onPressed: () => ref.invalidate(allPaymentsProvider),
-                child: const Text('تلاش دوباره'),
-              ),
-            )
-          : const Center(child: CircularProgressIndicator());
-    } else if (asyncPayments.value!.isEmpty) {
+    if (asyncPayments.hasError) {
       body = EmptyState(
-        title: 'هنوز پرداختی ثبت نشده',
-        message: 'دستمزدها، علی‌الحساب‌ها و بازپرداخت هزینه‌ها را اینجا ثبت کنید '
-            'تا مانده حساب هر کارفرما دقیق بماند.',
-        action: FilledButton.icon(
-          onPressed: () => showPaymentFormSheet(context),
-          icon: const Icon(Icons.add_rounded),
-          label: const Text('ثبت پرداخت'),
+        icon: Icons.error_outline_rounded,
+        title: 'خواندن پرداخت‌ها ناموفق بود',
+        message: '${asyncPayments.error}',
+        action: FilledButton.tonal(
+          onPressed: () => ref.invalidate(allPaymentsProvider),
+          child: const Text('تلاش دوباره'),
         ),
       );
+    } else if (asyncPayments.value == null) {
+      body = const Center(child: CircularProgressIndicator());
     } else {
-      body = Column(
-        children: [
-          _SummaryCard(
-            totalRial: ref.watch(filteredPaymentsTotalProvider),
-            count: payments.length,
-            overallBalance: overallBalance,
-          ),
-          _FilterBar(
-            employers: activeEmployers,
-            filter: filter,
-            onEmployer: controller.setEmployer,
-            onType: controller.setType,
-            onClear: controller.clear,
-          ),
-          Expanded(
-            child: payments.isEmpty
-                ? EmptyState(
-                    compact: true,
-                    icon: Icons.filter_alt_off_outlined,
-                    title: 'با این فیلترها پرداختی نیست',
-                    message: 'فیلترها را پاک کنید تا همه پرداخت‌ها را ببینید.',
-                    action: FilledButton.tonal(
-                      onPressed: controller.clear,
-                      child: const Text('پاک کردن فیلترها'),
+      body = CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+              child: Column(
+                children: [
+                  _SummaryBar(
+                    totalRial: total,
+                    count: groups.fold(
+                      0,
+                      (sum, group) => sum + group.payments.length,
                     ),
-                  )
-                : ListView.separated(
-                    padding: EdgeInsets.fromLTRB(
-                      12,
-                      4,
-                      12,
-                      AppTokens.navClearance(context),
-                    ),
-                    itemCount: payments.length,
-                    separatorBuilder: (_, _) =>
-                        Divider(height: 1, color: theme.colorScheme.outlineVariant),
-                    itemBuilder: (context, index) {
-                      final payment = payments[index];
-                      final tile = Dismissible(
-                        key: ValueKey('payment-${payment.id}'),
-                        direction: DismissDirection.horizontal,
-                        confirmDismiss: (_) => confirmDialog(
-                          context,
-                          title: 'حذف پرداخت؟',
-                          message: 'این پرداخت حذف می‌شود. تا چند لحظه می‌توانید '
-                              'بازگردانید.',
-                          confirmLabel: 'حذف',
-                          destructive: true,
-                        ),
-                        onDismissed: (_) => _delete(context, ref, payment),
-                        child: PaymentTile(
-                          payment: payment,
-                          employer: employers[payment.employerId],
-                          onTap: () => showPaymentFormSheet(
-                            context,
-                            payment: payment,
-                          ),
-                        ),
-                      );
-                      if (reduced) return tile;
-                      return tile
-                          .animate()
-                          .fadeIn(
-                            delay: Duration(
-                              milliseconds: 25 * index.clamp(0, 12),
-                            ),
-                            duration: 240.ms,
-                          )
-                          .slideY(begin: 0.05, end: 0, duration: 240.ms);
-                    },
+                    balanceRial: balance,
                   ),
+                  const SizedBox(height: 10),
+                  _FilterBar(
+                    employers: activeEmployers,
+                    filter: filter,
+                    onEmployer: controller.setEmployer,
+                    onType: controller.setType,
+                    onPickRange: () => _pickRange(context, ref, filter),
+                    onClearRange: controller.clearRange,
+                    onClear: controller.clear,
+                  ),
+                ],
+              ),
+            ),
           ),
+          if (groups.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: EmptyState(
+                title: filter.isActive ? 'با این فیلترها پرداختی نیست' : 'هنوز پرداختی ثبت نشده',
+                message: filter.isActive
+                    ? 'فیلترها را پاک کن تا همه پرداخت‌ها را ببینی.'
+                    : 'دستمزدها، علی‌الحساب‌ها و بازپرداخت هزینه‌ها را اینجا ثبت کن.',
+                action: FilledButton.icon(
+                  onPressed: () => showPaymentFormSheet(context),
+                  icon: filter.isActive
+                      ? const Icon(Icons.clear_rounded)
+                      : const Icon(Icons.add_rounded),
+                  label: Text(filter.isActive ? 'پاک کردن فیلترها' : 'ثبت پرداخت'),
+                ),
+              ),
+            )
+          else ...[
+            for (final group in groups) ...[
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _MonthHeaderDelegate(
+                  month: group.month,
+                  totalRial: group.totalRial,
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                sliver: SliverList.builder(
+                  itemCount: group.payments.length,
+                  itemBuilder: (context, index) {
+                    final payment = group.payments[index];
+                    return Dismissible(
+                      key: ValueKey('payment-${payment.id}'),
+                      direction: DismissDirection.horizontal,
+                      confirmDismiss: (_) => confirmDialog(
+                        context,
+                        title: 'حذف پرداخت؟',
+                        message:
+                            'این پرداخت حذف می‌شود. تا چند لحظه می‌توانی برگردانی.',
+                        confirmLabel: 'حذف',
+                        destructive: true,
+                      ),
+                      onDismissed: (_) => _delete(context, ref, payment),
+                      child: PaymentTile(
+                        payment: payment,
+                        employer: employers[payment.employerId],
+                        onTap: () =>
+                            showPaymentFormSheet(context, payment: payment),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+            SliverToBoxAdapter(
+              child: SizedBox(height: AppTokens.navClearance(context)),
+            ),
+          ],
         ],
       );
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('پرداخت‌ها'),
-        actions: const [
+      appBar: const DipiHeader(
+        title: 'پرداخت‌ها',
+        updateAction: UpdateHeaderButton(),
+        actions: [
           ContextHelpButton(topicId: 'add-payment'),
           SettingsButton(),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        // The tabs live together in an IndexedStack; a default hero tag would
-        // clash with the employers FAB during route transitions.
         heroTag: null,
         onPressed: () => showPaymentFormSheet(context),
         icon: const Icon(Icons.add_rounded),
@@ -153,6 +158,22 @@ class PaymentsPage extends ConsumerWidget {
       ),
       body: body,
     );
+  }
+
+  Future<void> _pickRange(
+    BuildContext context,
+    WidgetRef ref,
+    PaymentsFilter filter,
+  ) async {
+    final now = DateTime.now();
+    final from = await showJalaliDatePicker(
+      context,
+      initialDate: filter.from ?? DateTime(now.year, now.month, 1),
+    );
+    if (from == null || !context.mounted) return;
+    final to = await showJalaliDatePicker(context, initialDate: filter.to ?? now);
+    if (to == null || !context.mounted) return;
+    ref.read(paymentsFilterProvider.notifier).setRange(from, to);
   }
 
   Future<void> _delete(
@@ -170,26 +191,25 @@ class PaymentsPage extends ConsumerWidget {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({
+class _SummaryBar extends StatelessWidget {
+  const _SummaryBar({
     required this.totalRial,
     required this.count,
-    required this.overallBalance,
+    required this.balanceRial,
   });
 
   final int totalRial;
   final int count;
-  final int overallBalance;
+  final int balanceRial;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppTokens.radiusCard),
       ),
       child: Row(
         children: [
@@ -198,7 +218,7 @@ class _SummaryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'جمع پرداخت‌ها',
+                  'جمع دریافتی',
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -208,7 +228,7 @@ class _SummaryCard extends StatelessWidget {
                   amountRial: totalRial,
                   animate: true,
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                     color: theme.colorScheme.error,
                   ),
                 ),
@@ -232,7 +252,7 @@ class _SummaryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              BalanceChip(balanceRial: overallBalance),
+              BalanceChip(balanceRial: balanceRial),
             ],
           ),
         ],
@@ -247,6 +267,8 @@ class _FilterBar extends StatelessWidget {
     required this.filter,
     required this.onEmployer,
     required this.onType,
+    required this.onPickRange,
+    required this.onClearRange,
     required this.onClear,
   });
 
@@ -254,17 +276,23 @@ class _FilterBar extends StatelessWidget {
   final PaymentsFilter filter;
   final ValueChanged<int?> onEmployer;
   final ValueChanged<PaymentType?> onType;
+  final VoidCallback onPickRange;
+  final VoidCallback onClearRange;
   final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final rangeLabel = filter.hasRange
+        ? '${formatJalaliShort(filter.from ?? filter.to!)} تا '
+              '${formatJalaliShort(filter.to ?? filter.from!)}'
+        : 'بازه تاریخ';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             children: [
               FilterChip(
@@ -277,7 +305,7 @@ class _FilterBar extends StatelessWidget {
                 FilterChip(
                   avatar: CircleAvatar(
                     backgroundColor: Color(employer.color),
-                    radius: 6,
+                    radius: 7,
                   ),
                   label: Text(employer.name),
                   selected: filter.employerId == employer.id,
@@ -291,7 +319,6 @@ class _FilterBar extends StatelessWidget {
         const SizedBox(height: 6),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             children: [
               FilterChip(
@@ -305,6 +332,20 @@ class _FilterBar extends StatelessWidget {
                   label: Text(type.label),
                   selected: filter.type == type,
                   onSelected: (selected) => onType(selected ? type : null),
+                ),
+              ],
+              const SizedBox(width: 8),
+              ActionChip(
+                avatar: const Icon(Icons.date_range_outlined, size: 18),
+                label: Text(rangeLabel),
+                onPressed: onPickRange,
+              ),
+              if (filter.hasRange) ...[
+                const SizedBox(width: 8),
+                ActionChip(
+                  avatar: const Icon(Icons.close_rounded, size: 16),
+                  label: const Text('حذف بازه'),
+                  onPressed: onClearRange,
                 ),
               ],
               if (filter.isActive) ...[
@@ -322,9 +363,64 @@ class _FilterBar extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 4),
-        Divider(height: 1, color: theme.colorScheme.outlineVariant),
       ],
     );
   }
+}
+
+class _MonthHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _MonthHeaderDelegate({required this.month, required this.totalRial});
+
+  final DateTime month;
+  final int totalRial;
+
+  @override
+  double get minExtent => 46;
+
+  @override
+  double get maxExtent => 46;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final theme = Theme.of(context);
+    return Container(
+      color: theme.colorScheme.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      alignment: AlignmentDirectional.centerStart,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              formatJalaliMonthYear(month),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          Text(
+            'جمع ماه: ',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          MoneyText(
+            amountRial: totalRial,
+            withUnit: false,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_MonthHeaderDelegate oldDelegate) =>
+      oldDelegate.month != month || oldDelegate.totalRial != totalRial;
 }
