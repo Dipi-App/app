@@ -1,3 +1,25 @@
+## 1.5.0 — 2026-10-15
+
+- ci: cut the version from Conventional Commits instead of a manual bump
+- chore(release): v1.5.0 [skip ci]
+- ci(release): publish dipi.apk and dipi.apk.sha256 with every release
+- docs: add open-source files (license, readmes, templates) and cover .env in gitignore
+- chore(release): v1.4.0 [skip ci]
+- ci(release): tag-triggered signed builds with signature verification
+- feat(update): check GitHub releases and open the APK in the browser
+- feat(ui): scrollable calendar page and floating action buttons above the nav bar
+- chore(release): v1.3.0 [skip ci]
+- feat: automatic local backups, drop Google Drive, calendar UI fixes
+- chore: extract the right CHANGELOG section for release notes
+- chore(release): v1.2.1 [skip ci]
+- fix: make the update downloader dispose-safe and its tests deterministic
+- chore(release): v1.2.0 [skip ci]
+- feat: in-app auto-update from GitHub releases
+- chore(release): v1.1.0 [skip ci]
+- feat: floating nav, Material 3 theme, onboarding/help, CI/CD and versioning
+- Add stats, backup/export, Drive backup and app lock
+- Add Dipi: offline Persian workday and payment ledger
+
 ## 1.4.0 — 2026-10-15
 
 - ci(release): tag-triggered signed builds with signature verification
