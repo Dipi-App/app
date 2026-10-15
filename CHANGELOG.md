@@ -1,3 +1,9 @@
+## 1.4.0 — 2026-10-15
+
+- ci(release): tag-triggered signed builds with signature verification
+- feat(update): check GitHub releases and open the APK in the browser
+- feat(ui): scrollable calendar page and floating action buttons above the nav bar
+
 ## 1.3.0 — 2026-10-15
 
 - feat: automatic local backups, drop Google Drive, calendar UI fixes
