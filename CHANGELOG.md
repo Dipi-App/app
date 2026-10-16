@@ -1,3 +1,7 @@
+## 1.6.1 — 2026-10-16
+
+- chore: add demo seeder and screenshot capture tools
+
 ## 1.6.0 — 2026-10-16
 
 - feat: allocate payments to pending workdays and share employer stats
