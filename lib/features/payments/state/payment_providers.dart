@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/database_providers.dart';
 import '../../../core/utils/jalali_utils.dart';
 import '../../../data/db/app_database.dart';
-import '../../../data/db/work_entry_dao.dart';
+import '../../../domain/allocation.dart';
+import '../../../domain/employer_stats.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/settlement.dart';
 import '../../../domain/stats.dart';
@@ -130,28 +131,75 @@ final employerPaymentsProvider = StreamProvider.family<List<Payment>, int>(
   (ref, employerId) => ref.watch(paymentDaoProvider).watchForEmployer(employerId),
 );
 
-/// Wage and out-of-pocket sums per employer (aggregated in SQLite).
-final entrySumsProvider = StreamProvider<Map<int, EntrySums>>(
-  (ref) => ref.watch(workEntryDaoProvider).watchSumsByEmployer(),
+/// Every work entry in the ledger, loaded once so the derived per-employer
+/// numbers need no query per card.
+final allWorkEntriesProvider = StreamProvider<List<WorkEntry>>(
+  (ref) => ref.watch(workEntryDaoProvider).watchAll(),
 );
 
-/// Total paid per employer (aggregated in SQLite).
-final paymentSumsProvider = StreamProvider<Map<int, int>>(
-  (ref) => ref.watch(paymentDaoProvider).watchTotalsByEmployer(),
+/// Derived payment allocation per employer. Computed, never saved, so editing
+/// or deleting a payment updates it by itself.
+final allocationByEmployerProvider = Provider<Map<int, AllocationResult>>((
+  ref,
+) {
+  final entries =
+      ref.watch(allWorkEntriesProvider).value ?? const <WorkEntry>[];
+  final payments = ref.watch(allPaymentsProvider).value ?? const <Payment>[];
+  final employers = ref.watch(employersByIdProvider);
+
+  final entriesByEmployer = <int, List<WorkEntry>>{};
+  for (final entry in entries) {
+    entriesByEmployer.putIfAbsent(entry.employerId, () => []).add(entry);
+  }
+  final paymentsByEmployer = <int, List<Payment>>{};
+  for (final payment in payments) {
+    paymentsByEmployer.putIfAbsent(payment.employerId, () => []).add(payment);
+  }
+
+  return {
+    for (final employer in employers.values)
+      employer.id: allocateEmployer(
+        dailyWageRial: employer.defaultDailyWage,
+        entries: entriesByEmployer[employer.id] ?? const <WorkEntry>[],
+        payments: paymentsByEmployer[employer.id] ?? const <Payment>[],
+      ),
+  };
+});
+
+final employerAllocationProvider = Provider.family<AllocationResult, int>(
+  (ref, employerId) =>
+      ref.watch(allocationByEmployerProvider)[employerId] ??
+      const AllocationResult.none(),
 );
 
-/// Balance per employer, following the balance rule.
+/// The six shared stats for every employer, computed in a single pass.
+final employerStatsMapProvider = Provider<Map<int, EmployerStats>>((ref) {
+  final entries =
+      ref.watch(allWorkEntriesProvider).value ?? const <WorkEntry>[];
+  final payments = ref.watch(allPaymentsProvider).value ?? const <Payment>[];
+  return employerStatsByEmployer(entries: entries, payments: payments);
+});
+
+/// Balance per employer.
+///
+/// With a daily wage defined the balance follows the payment allocation:
+/// `uncovered pending days × W − credit`. Without one the classic rule is
+/// kept: `earned − payments`.
 final employerBalancesProvider = Provider<Map<int, int>>((ref) {
-  final entries = ref.watch(entrySumsProvider).value ?? const <int, EntrySums>{};
-  final payments =
-      ref.watch(paymentSumsProvider).value ?? const <int, int>{};
+  final employers = ref.watch(employersByIdProvider);
+  final allocations = ref.watch(allocationByEmployerProvider);
+  final stats = ref.watch(employerStatsMapProvider);
   final result = <int, int>{};
-  for (final employerId in {...entries.keys, ...payments.keys}) {
-    final sums = entries[employerId];
-    result[employerId] =
-        (sums?.wageRial ?? 0) +
-        (sums?.outOfPocketRial ?? 0) -
-        (payments[employerId] ?? 0);
+  for (final employer in employers.values) {
+    final wage = employer.defaultDailyWage;
+    if (wage != null && wage > 0) {
+      final allocation =
+          allocations[employer.id] ?? const AllocationResult.none();
+      result[employer.id] = allocation.balanceRial(wage);
+    } else {
+      final stat = stats[employer.id] ?? const EmployerStats.empty();
+      result[employer.id] = stat.wageRial + stat.outOfPocketRial - stat.paymentsTotalRial;
+    }
   }
   return result;
 });
@@ -163,6 +211,10 @@ final overallBalanceProvider = Provider<int>((ref) {
       .values
       .fold(0, (sum, balance) => sum + balance);
 });
+
+final employerBalanceProvider = Provider.family<int, int>(
+  (ref, employerId) => ref.watch(employerBalancesProvider)[employerId] ?? 0,
+);
 
 final employerSettlementProvider = Provider.family<SettlementSummary, int>((
   ref,

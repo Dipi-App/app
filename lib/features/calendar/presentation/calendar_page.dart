@@ -6,19 +6,19 @@ import '../../../core/help/help_page.dart';
 import '../../../core/providers/database_providers.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../../core/utils/jalali_utils.dart';
-import '../../../core/utils/persian_digits.dart';
 import '../../../core/utils/time_utils.dart';
 import '../../../core/widgets/directional_icons.dart';
 import '../../../core/widgets/dipi_header.dart';
 import '../../../data/db/app_database.dart';
-import '../../../domain/enums.dart';
 import '../../../shared/utils/motion.dart';
 import '../../../shared/widgets/app_dialogs.dart';
+import '../../../shared/widgets/card_action_button.dart';
 import '../../../shared/widgets/money_text.dart';
 import '../../../shared/widgets/settings_button.dart';
 import '../../app_update/presentation/widgets/update_header_button.dart';
 import '../../employers/presentation/widgets/employer_avatar.dart';
 import '../../employers/state/employer_providers.dart';
+import '../../payments/state/payment_providers.dart';
 import '../state/calendar_providers.dart';
 import 'widgets/day_cell.dart';
 import 'widgets/work_entry_form_sheet.dart';
@@ -146,7 +146,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                       controller: _controller,
                       baseMonth: _baseMonth,
                       selected: _selected,
-                      month: month,
                       onDayTap: _openDay,
                       onMonthChanged: (page) => ref
                           .read(visibleMonthProvider.notifier)
@@ -189,7 +188,6 @@ class _CalendarCard extends StatelessWidget {
     required this.controller,
     required this.baseMonth,
     required this.selected,
-    required this.month,
     required this.onDayTap,
     required this.onMonthChanged,
   });
@@ -199,7 +197,6 @@ class _CalendarCard extends StatelessWidget {
   final PageController controller;
   final DateTime baseMonth;
   final DateTime selected;
-  final DateTime month;
   final ValueChanged<DateTime> onDayTap;
   final ValueChanged<int> onMonthChanged;
 
@@ -241,8 +238,6 @@ class _CalendarCard extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(height: 6),
-            _MonthSummaryBar(monthKey: jalaliMonthKey(month)),
             const SizedBox(height: 8),
             const _CalendarLegend(),
           ],
@@ -327,115 +322,6 @@ class _MonthGrid extends ConsumerWidget {
       hasPending: pendingDays.contains(iso),
       selected: isSameDay(day, selected),
       onTap: () => onDayTap(day),
-    );
-  }
-}
-
-class _MonthSummaryBar extends ConsumerWidget {
-  const _MonthSummaryBar({required this.monthKey});
-
-  final String monthKey;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final totals = ref.watch(monthTotalsProvider(monthKey));
-    final theme = Theme.of(context);
-    final style = theme.textTheme.bodySmall?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-    );
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SummaryChip(
-            icon: Icons.event_available_outlined,
-            label: 'کارکرد',
-            value: '${toPersianDigits(totals.dayCount)} روز',
-            style: style,
-          ),
-          _SummaryChip(
-            icon: Icons.schedule_outlined,
-            label: 'ساعت کار',
-            value: '${formatHours(totals.hours)} ساعت',
-            style: style,
-          ),
-          _SummaryChip(
-            icon: Icons.payments_outlined,
-            label: 'دستمزد',
-            valueWidget: MoneyText(
-              amountRial: totals.wageRial,
-              withUnit: true,
-              style: style?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            style: style,
-          ),
-          if (totals.pendingCount > 0)
-            _SummaryChip(
-              icon: Icons.hourglass_empty_rounded,
-              label: 'در انتظار',
-              value: '${toPersianDigits(totals.pendingCount)} روز',
-              style: style?.copyWith(color: theme.colorScheme.tertiary),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryChip extends StatelessWidget {
-  const _SummaryChip({
-    required this.icon,
-    required this.label,
-    this.value,
-    this.valueWidget,
-    this.style,
-  });
-
-  final IconData icon;
-  final String label;
-  final String? value;
-  final Widget? valueWidget;
-  final TextStyle? style;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 14, color: style?.color),
-              const SizedBox(width: 4),
-              Flexible(
-                child: valueWidget ??
-                    Text(
-                      value ?? '—',
-                      overflow: TextOverflow.ellipsis,
-                      style: style,
-                    ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }
@@ -635,7 +521,8 @@ class _DayEntry extends ConsumerWidget {
     final note = (entry.note ?? '').trim();
     final place = (entry.place ?? '').trim();
     final job = (entry.job ?? '').trim();
-    final wageType = WageType.fromName(entry.wageType);
+    final allocation = ref.watch(employerAllocationProvider(entry.employerId));
+    final coveredAmount = allocation.amountFor(entry.id);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -657,6 +544,17 @@ class _DayEntry extends ConsumerWidget {
                 ),
               ),
             ),
+            CardActionButton(
+              icon: Icons.edit_outlined,
+              semanticLabel: 'ویرایش',
+              onPressed: () => showWorkEntryFormSheet(context, entry: entry),
+            ),
+            CardActionButton(
+              icon: Icons.delete_outline_rounded,
+              semanticLabel: 'حذف',
+              color: theme.colorScheme.error,
+              onPressed: () => _delete(context, ref),
+            ),
           ],
         ),
         const SizedBox(height: 10),
@@ -671,22 +569,8 @@ class _DayEntry extends ConsumerWidget {
         ),
         _DetailRow(
           icon: Icons.payments_outlined,
-          label: 'دستمزد (${wageType.label})',
-          child: entry.wageAmount == null
-              ? Text(
-                  'در انتظار',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.tertiary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                )
-              : MoneyText(
-                  amountRial: entry.wageAmount!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: color,
-                  ),
-                ),
+          label: 'دستمزد',
+          child: _wageValue(context, theme, color, coveredAmount),
         ),
         if (entry.outOfPocketAmount > 0)
           _DetailRow(
@@ -705,34 +589,66 @@ class _DayEntry extends ConsumerWidget {
             label: 'یادداشت',
             value: note,
           ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () =>
-                    showWorkEntryFormSheet(context, entry: entry),
-                icon: const Icon(Icons.edit_outlined),
-                label: const Text('ویرایش'),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                  side: BorderSide(
-                    color: theme.colorScheme.error.withValues(alpha: 0.5),
-                  ),
-                ),
-                onPressed: () => _delete(context, ref),
-                icon: const Icon(Icons.delete_outline_rounded),
-                label: const Text('حذف'),
-              ),
-            ),
-          ],
-        ),
       ],
+    );
+  }
+
+  Widget _wageValue(
+    BuildContext context,
+    ThemeData theme,
+    Color color,
+    int? coveredAmount,
+  ) {
+    final wage = entry.wageAmount;
+    if (wage != null) {
+      return MoneyText(
+        amountRial: wage,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      );
+    }
+    if (coveredAmount != null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'پرداخت‌شده',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: 6),
+              MoneyText(
+                amountRial: coveredAmount,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            'از پرداخت‌های کارفرما',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      );
+    }
+    return Text(
+      'در انتظار',
+      style: theme.textTheme.bodyMedium?.copyWith(
+        color: theme.colorScheme.tertiary,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 

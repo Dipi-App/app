@@ -6,8 +6,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/jalali_utils.dart';
 import '../../../core/widgets/directional_icons.dart';
 import '../../../core/utils/persian_digits.dart';
-import '../../../core/utils/time_utils.dart';
 import '../../../data/db/app_database.dart';
+import '../../../domain/allocation.dart';
+import '../../../domain/employer_stats.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/settlement.dart';
 import '../../../shared/widgets/app_dialogs.dart';
@@ -23,6 +24,7 @@ import '../../payments/state/payment_providers.dart';
 import '../state/employer_providers.dart';
 import 'widgets/employer_avatar.dart';
 import 'widgets/employer_form_sheet.dart';
+import 'widgets/employer_stats_grid.dart';
 
 class EmployerDetailPage extends ConsumerWidget {
   const EmployerDetailPage({super.key, required this.employerId});
@@ -54,6 +56,9 @@ class EmployerDetailPage extends ConsumerWidget {
         ref.watch(employerPaymentsProvider(employerId)).value ??
         const <Payment>[];
     final summary = ref.watch(employerSettlementProvider(employerId));
+    final stats = EmployerStats.fromSummary(summary);
+    final allocation = ref.watch(employerAllocationProvider(employerId));
+    final balanceRial = ref.watch(employerBalanceProvider(employerId));
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -96,58 +101,16 @@ class EmployerDetailPage extends ConsumerWidget {
         children: [
           _Header(employer: employer),
           const SizedBox(height: 12),
-          _BalanceCard(summary: summary, employerId: employer.id),
+          _BalanceCard(
+            balanceRial: balanceRial,
+            allocation: allocation,
+            employer: employer,
+            employerId: employer.id,
+          ),
           const SizedBox(height: 12),
           SectionCard(
             title: 'جمع کارفرما',
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    _Stat(label: 'روز کاری', count: summary.dayCount),
-                    _Stat(label: 'ساعت', value: formatHours(summary.hours)),
-                    _Stat(label: 'روزکار', count: summary.entryCount),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    _Stat(
-                      label: 'جمع دستمزد',
-                      valueWidget: MoneyText(
-                        amountRial: summary.wageRial,
-                        animate: true,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF2E7D6F),
-                        ),
-                      ),
-                    ),
-                    _Stat(
-                      label: 'از جیب خودم',
-                      valueWidget: MoneyText(
-                        amountRial: summary.outOfPocketRial,
-                        animate: true,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    _Stat(
-                      label: 'پرداخت‌ها',
-                      valueWidget: MoneyText(
-                        amountRial: summary.paymentsTotalRial,
-                        animate: true,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.error,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            child: EmployerStatsGrid(stats: stats),
           ),
           const SizedBox(height: 12),
           SectionCard(
@@ -156,7 +119,7 @@ class EmployerDetailPage extends ConsumerWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (summary.pendingCount > 0) ...[
+                if (allocation.pendingCount > 0) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -167,7 +130,7 @@ class EmployerDetailPage extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '${toPersianDigits(summary.pendingCount)} در انتظار',
+                      '${toPersianDigits(allocation.pendingCount)} در انتظار',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.tertiary,
                         fontWeight: FontWeight.w600,
@@ -205,6 +168,7 @@ class EmployerDetailPage extends ConsumerWidget {
                           child: WorkEntryTile(
                             entry: entry,
                             employer: employer,
+                            allocation: allocation,
                             onTap: () => showWorkEntryFormSheet(
                               context,
                               entry: entry,
@@ -326,15 +290,25 @@ class EmployerDetailPage extends ConsumerWidget {
 }
 
 class _BalanceCard extends StatelessWidget {
-  const _BalanceCard({required this.summary, required this.employerId});
+  const _BalanceCard({
+    required this.balanceRial,
+    required this.allocation,
+    required this.employer,
+    required this.employerId,
+  });
 
-  final SettlementSummary summary;
+  final int balanceRial;
+  final AllocationResult allocation;
+  final Employer employer;
   final int employerId;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = AppColors.settlementColor(context, summary.state);
+    final state = settlementStateOf(balanceRial);
+    final color = AppColors.settlementColor(context, state);
+    final showWageHint =
+        employer.defaultDailyWage == null && allocation.pendingCount > 0;
 
     return Card(
       color: color.withValues(alpha: 0.10),
@@ -346,56 +320,108 @@ class _BalanceCard extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'مانده حساب',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          summary.state.label,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: color,
-                            fontWeight: FontWeight.w700,
+                          'مانده حساب',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Flexible(
-                          child: MoneyText(
-                            amountRial: summary.balanceRial.abs(),
-                            animate: true,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: color,
-                              fontWeight: FontWeight.w700,
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Text(
+                              state.label,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: color,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 10),
+                            Flexible(
+                              child: MoneyText(
+                                amountRial: balanceRial.abs(),
+                                animate: true,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: color,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'تسویه حساب',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: color,
-                    ),
                   ),
-                  Icon(DirectionalIcons.forward, color: color),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'تسویه حساب',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: color,
+                        ),
+                      ),
+                      Icon(DirectionalIcons.forward, color: color),
+                    ],
+                  ),
                 ],
               ),
+              if (allocation.creditRial > 0) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.savings_outlined,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'اعتبار برای روز بعد: ',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    MoneyText(
+                      amountRial: allocation.creditRial,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (showWageHint) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 16,
+                      color: theme.colorScheme.tertiary,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'مبلغ دستمزد روزانه را تعریف کنید',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.tertiary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
@@ -528,48 +554,6 @@ class _Header extends StatelessWidget {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat({required this.label, this.value, this.count, this.valueWidget});
-
-  final String label;
-  final String? value;
-  final int? count;
-  final Widget? valueWidget;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Expanded(
-      child: Column(
-        children: [
-          valueWidget ??
-              (count != null
-                  ? CountUpText(
-                      value: count!,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    )
-                  : Text(
-                      value ?? '—',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    )),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
       ),
     );
   }

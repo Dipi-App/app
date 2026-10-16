@@ -182,14 +182,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: _next,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppTokens.space4,
-                    ),
-                    child: Text(
-                      _page >= _slides.length - 1 ? 'شروع کن' : 'بعدی',
-                    ),
-                  ),
+                  child: Text(_page >= _slides.length - 1 ? 'شروع کن' : 'بعدی'),
                 ),
               ),
             ),

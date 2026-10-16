@@ -9,17 +9,21 @@ import '../../../core/widgets/dipi_header.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/persian_digits.dart';
 import '../../../data/db/app_database.dart';
+import '../../../domain/employer_stats.dart';
 import '../../../domain/enums.dart';
 import '../../../shared/utils/motion.dart';
+import '../../../shared/widgets/balance_chip.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/nav_aware_fab.dart';
 import '../../../shared/widgets/settings_button.dart';
 import '../../app_update/presentation/widgets/update_header_button.dart';
+import '../../payments/state/payment_providers.dart';
 import '../../settings/state/settings_providers.dart';
 import '../state/employer_providers.dart';
 import 'employer_detail_page.dart';
 import 'widgets/employer_avatar.dart';
 import 'widgets/employer_form_sheet.dart';
+import 'widgets/employer_stats_grid.dart';
 
 class EmployersPage extends ConsumerStatefulWidget {
   const EmployersPage({super.key});
@@ -36,6 +40,8 @@ class _EmployersPageState extends ConsumerState<EmployersPage> {
     final asyncEmployers = ref.watch(employersProvider);
     final active = ref.watch(activeEmployersProvider);
     final archived = ref.watch(archivedEmployersProvider);
+    final statsByEmployer = ref.watch(employerStatsMapProvider);
+    final balances = ref.watch(employerBalancesProvider);
     final list = _showArchived ? archived : active;
     final reduced = reduceMotion(context);
 
@@ -85,7 +91,12 @@ class _EmployersPageState extends ConsumerState<EmployersPage> {
         itemCount: list.length,
         separatorBuilder: (_, _) => const SizedBox(height: 8),
         itemBuilder: (context, index) {
-          final tile = _EmployerTile(employer: list[index]);
+          final employer = list[index];
+          final tile = _EmployerTile(
+            employer: employer,
+            stats: statsByEmployer[employer.id] ?? const EmployerStats.empty(),
+            balanceRial: balances[employer.id] ?? 0,
+          );
           if (reduced) return tile;
           return tile
               .animate()
@@ -132,9 +143,15 @@ class _EmployersPageState extends ConsumerState<EmployersPage> {
 }
 
 class _EmployerTile extends ConsumerWidget {
-  const _EmployerTile({required this.employer});
+  const _EmployerTile({
+    required this.employer,
+    required this.stats,
+    required this.balanceRial,
+  });
 
   final Employer employer;
+  final EmployerStats stats;
+  final int balanceRial;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -157,57 +174,69 @@ class _EmployerTile extends ConsumerWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Hero(
-                tag: 'employer-avatar-${employer.id}',
-                child: EmployerAvatar(
-                  name: employer.name,
-                  color: employer.color,
-                  size: 46,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              Row(
+                children: [
+                  Hero(
+                    tag: 'employer-avatar-${employer.id}',
+                    child: EmployerAvatar(
+                      name: employer.name,
+                      color: employer.color,
+                      size: 46,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Flexible(
-                          child: Text(
-                            employer.name,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                employer.name,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
+                            if (employer.isArchived) ...[
+                              const SizedBox(width: 8),
+                              _Tag(
+                                text: 'بایگانی',
+                                color: theme.colorScheme.outline,
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          [
+                            if (phone.isNotEmpty) toPersianDigits(phone),
+                            wageType.label,
+                            if (employer.defaultDailyWage != null)
+                              formatMoney(employer.defaultDailyWage!, unit),
+                          ].join(' — '),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        if (employer.isArchived) ...[
-                          const SizedBox(width: 8),
-                          _Tag(
-                            text: 'بایگانی',
-                            color: theme.colorScheme.outline,
-                          ),
-                        ],
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      [
-                        if (phone.isNotEmpty) toPersianDigits(phone),
-                        wageType.label,
-                        if (employer.defaultDailyWage != null)
-                          formatMoney(employer.defaultDailyWage!, unit),
-                      ].join(' — '),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  Icon(DirectionalIcons.forward, color: theme.colorScheme.outline),
+                ],
               ),
-              Icon(DirectionalIcons.forward, color: theme.colorScheme.outline),
+              const SizedBox(height: 14),
+              EmployerStatsGrid(stats: stats, dense: true),
+              const SizedBox(height: 12),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: BalanceChip(balanceRial: balanceRial, compact: true),
+              ),
             ],
           ),
         ),

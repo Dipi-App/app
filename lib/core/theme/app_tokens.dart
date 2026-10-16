@@ -25,6 +25,10 @@ abstract final class AppTokens {
   static const double minTapTarget = 48;
   static const double comfortableTapTarget = 56;
 
+  // Text-button sizing. The painted button is 40 high; MaterialTapTargetSize
+  // keeps the real tap target at 48 (>= the 44 minimum).
+  static const double buttonHeight = 40;
+
   // The floating navigation bar geometry.
   //
   // Outer margin from the screen edges / bottom (12–16) plus the system safe

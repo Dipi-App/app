@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/utils/time_utils.dart';
 import '../../data/db/app_database.dart';
+import '../../domain/allocation.dart';
 import '../../domain/enums.dart';
 import 'employer_dot.dart';
 import 'money_text.dart';
@@ -11,6 +12,7 @@ class WorkEntryTile extends StatelessWidget {
     super.key,
     required this.entry,
     required this.employer,
+    this.allocation,
     this.onTap,
     this.onLongPress,
     this.trailing,
@@ -18,6 +20,10 @@ class WorkEntryTile extends StatelessWidget {
 
   final WorkEntry entry;
   final Employer? employer;
+
+  /// Optional payment allocation so a pending day covered by the employer's
+  /// payments is shown with its amount instead of the "in wait" badge.
+  final AllocationResult? allocation;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final Widget? trailing;
@@ -29,6 +35,10 @@ class WorkEntryTile extends StatelessWidget {
     final metaStyle = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
+    final allocationAmount = entry.wageAmount == null
+        ? allocation?.amountFor(entry.id)
+        : null;
+    final effectiveWage = entry.wageAmount ?? allocationAmount;
     final title = [
       if ((entry.place ?? '').trim().isNotEmpty) entry.place!.trim(),
       if ((entry.job ?? '').trim().isNotEmpty) entry.job!.trim(),
@@ -88,7 +98,7 @@ class WorkEntryTile extends StatelessWidget {
                           icon: Icons.timelapse_rounded,
                           child: Text('بدون ساعت', style: metaStyle),
                         ),
-                      if (entry.wageAmount == null)
+                      if (effectiveWage == null)
                         _Badge(
                           text: 'دستمزد در انتظار',
                           color: theme.colorScheme.tertiary,
@@ -97,7 +107,7 @@ class WorkEntryTile extends StatelessWidget {
                         _Meta(
                           icon: Icons.payments_outlined,
                           child: MoneyText(
-                            amountRial: entry.wageAmount!,
+                            amountRial: effectiveWage,
                             style: metaStyle,
                           ),
                         ),

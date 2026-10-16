@@ -152,28 +152,26 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(
-            AppTokens.minTapTarget,
-            AppTokens.comfortableTapTarget,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: AppTokens.space24),
+          minimumSize: const Size(48, AppTokens.buttonHeight),
+          padding: const EdgeInsets.symmetric(horizontal: AppTokens.space16),
+          visualDensity: VisualDensity.compact,
+          tapTargetSize: MaterialTapTargetSize.padded,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
           ),
           textStyle: const TextStyle(
             fontFamily: fontFamily,
             fontWeight: FontWeight.w700,
-            fontSize: 17,
+            fontSize: 14,
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(
-            AppTokens.minTapTarget,
-            AppTokens.comfortableTapTarget,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: AppTokens.space24),
+          minimumSize: const Size(48, AppTokens.buttonHeight),
+          padding: const EdgeInsets.symmetric(horizontal: AppTokens.space16),
+          visualDensity: VisualDensity.compact,
+          tapTargetSize: MaterialTapTargetSize.padded,
           side: BorderSide(color: scheme.outlineVariant),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTokens.radiusMedium),
@@ -181,20 +179,20 @@ class AppTheme {
           textStyle: const TextStyle(
             fontFamily: fontFamily,
             fontWeight: FontWeight.w700,
-            fontSize: 17,
+            fontSize: 14,
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          minimumSize: const Size(
-            AppTokens.minTapTarget,
-            AppTokens.minTapTarget,
-          ),
+          minimumSize: const Size(48, AppTokens.buttonHeight),
+          padding: const EdgeInsets.symmetric(horizontal: AppTokens.space16),
+          visualDensity: VisualDensity.compact,
+          tapTargetSize: MaterialTapTargetSize.padded,
           textStyle: const TextStyle(
             fontFamily: fontFamily,
             fontWeight: FontWeight.w700,
-            fontSize: 16,
+            fontSize: 14,
           ),
         ),
       ),

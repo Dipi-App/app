@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/database_providers.dart';
 import '../../../core/utils/jalali_utils.dart';
 import '../../../data/db/app_database.dart';
-import '../../../domain/work_entry_stats.dart';
+import '../../../domain/allocation.dart';
 import '../../employers/state/employer_providers.dart';
+import '../../payments/state/payment_providers.dart';
 
 class VisibleMonth extends Notifier<DateTime> {
   @override
@@ -60,22 +61,18 @@ final monthDayColorsProvider = Provider.autoDispose
       return result;
     });
 
-/// Days of a month that still have a wage amount to fill in.
+/// Days of a month that still have a pending (uncovered) workday.
 final monthPendingDaysProvider = Provider.autoDispose
     .family<Set<String>, String>((ref, monthKey) {
       final entries =
           ref.watch(monthEntriesProvider(monthKey)).value ?? const <WorkEntry>[];
+      final allocations = ref.watch(allocationByEmployerProvider);
       return {
         for (final entry in entries)
-          if (entry.wageAmount == null) entry.date,
+          if (!entryIsPaid(
+            entry,
+            allocations[entry.employerId] ?? const AllocationResult.none(),
+          ))
+            entry.date,
       };
     });
-
-final monthTotalsProvider = Provider.autoDispose.family<EntryTotals, String>((
-  ref,
-  monthKey,
-) {
-  final entries =
-      ref.watch(monthEntriesProvider(monthKey)).value ?? const <WorkEntry>[];
-  return summarizeEntries(entries);
-});

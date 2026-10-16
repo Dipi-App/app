@@ -33,6 +33,15 @@ class WorkEntryDao {
         .watch();
   }
 
+  Stream<List<WorkEntry>> watchAll() {
+    return (_db.select(_db.workEntries)
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.date),
+            (t) => OrderingTerm(expression: t.id),
+          ]))
+        .watch();
+  }
+
   Stream<List<WorkEntry>> watchForEmployer(int employerId) {
     return (_db.select(_db.workEntries)
           ..where((t) => t.employerId.equals(employerId))
