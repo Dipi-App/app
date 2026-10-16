@@ -1,3 +1,7 @@
+## 1.6.0 — 2026-10-16
+
+- feat: allocate payments to pending workdays and share employer stats
+
 ## 1.5.0 — 2026-10-15
 
 - ci: cut the version from Conventional Commits instead of a manual bump
