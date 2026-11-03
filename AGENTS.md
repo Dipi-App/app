@@ -116,9 +116,40 @@ namespace stays `com.yourname.dipi` so no source file has to move.
   (`features/backup/data/auto_backup_scheduler.dart`). It writes
   `Documents/dipi/dipi_backup_YYYYMMDD_HHmm.json` through the local
   `dipi_documents` plugin (Android `MediaStore`, no permission, API 29+),
-  keeps the last 14 files, and records the time in `app_settings.lastBackupAt`.
+  keeps the last 10 files, and records the time in `app_settings.lastBackupAt`.
+- Nothing changed since the last written backup ⇒ no file is created. The check
+  is a SHA-256 over `schemaVersion`+`appVersion`, the rows sorted by id and the
+  settings (`BackupDocument.contentFingerprint`,
+  `features/backup/domain/backup_fingerprint.dart`), stored in `key_values` as
+  `lastBackupFingerprint`. Export timestamps and the app-written keys
+  (`lastBackupAt`, `lastBackupFingerprint`, `lastBackupReminderAt`,
+  `lastUpdateCheckAt`, `backupRecoveryOffered`) are excluded — without that, the
+  daily update check alone would make every run look like new data. A skipped
+  run leaves `lastBackupAt` untouched, so it keeps meaning "last real
+  snapshot". The manual "پشتیبان‌گیری الان" button uses the same rule and says
+  so in Persian.
 - Files are written to a temp file first and published with MediaStore
   `IS_PENDING`, so a half-written file is never visible.
+- The 10-file cap counts only backups this install owns. Uninstall clears the
+  MediaStore `owner_package_name`, and `prune()` cannot delete rows it does not
+  recognise as its own, so orphan files from earlier installs stay on disk
+  (seen during QA as 17 orphan rows next to 2 owned). Reinstall recovery reads
+  the newest non-empty snapshot regardless of how many orphans accumulated.
+- **Reinstall recovery** (`features/backup/data/backup_recovery.dart`, offered
+  once by `AppGate` when onboarding is done and the ledger is empty): the app
+  reads the newest backup that still holds data and offers ادغام / جایگزینی
+  کامل. **Android 11 and newer hide the files an earlier install left behind** —
+  uninstall clears their MediaStore owner, and after that they are invisible to
+  our query, to the `File` API and even to the system file picker (verified on
+  Android 16: "No matches in SDCARD"). So the offer asks for
+  `MANAGE_EXTERNAL_STORAGE` ("All files access"), which the user can only turn
+  on in the system settings; `AppGate` picks the offer back up on resume. That
+  resume re-arms the look instead of closing it — a process started before the
+  grant cannot always see it, and closing the offer on that answer would throw
+  away the only copy of the data. The access dialog is therefore shown at most
+  once per launch; a second pass says «دیپی را دوباره باز کنید». Tapping بعداً
+  ends the offer (`backupRecoveryOffered`), and on Android 10 and older nothing
+  is asked because the rows are already visible.
 - `android:allowBackup="false"` keeps the OS from uploading app data.
 
 ## App lock
