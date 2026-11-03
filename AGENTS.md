@@ -5,10 +5,22 @@ See `README.md` for the product overview and `docs/RELEASE.md` for releasing.
 
 ## Environment notes (this machine)
 
-`pub.dev` is not reachable here (`403`). Use the mirror for every pub command:
+`pub.dev` answers here, but it has been known to return `403`. If a pub command
+fails, use the mirror instead:
 
 ```bash
 export PUB_HOSTED_URL=https://pub.flutter-io.cn
+```
+
+Resolve through the mirror if you must, but **never commit a mirror-resolved
+`pubspec.lock`**: the committed lockfile says `https://pub.dev`, and CI installs
+it with `--enforce-lockfile`. A lockfile whose host differs from CI's makes pub
+discard every pin and re-resolve, so the release would ship versions nobody
+analysed or tested (this is how v1.7.0's first CI attempt failed). After a
+mirror run, restore it:
+
+```bash
+git checkout -- pubspec.lock
 ```
 
 `dart` on `PATH` may point at a standalone SDK (`/usr/lib/dart`). Use the Flutter
