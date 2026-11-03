@@ -34,7 +34,7 @@ class DipiDocuments {
   static Future<SavedDocument> saveBackup({
     required String tempPath,
     required String fileName,
-    int keep = 14,
+    int keep = 10,
   }) async {
     final result = await _channel.invokeMapMethod<Object?, Object?>(
       'saveBackup',
@@ -49,7 +49,8 @@ class DipiDocuments {
     return SavedDocument.fromMap(result);
   }
 
-  /// Backups currently in `Documents/dipi`, newest first.
+  /// Backups currently in `Documents/dipi`, newest first. Each entry carries the
+  /// [SavedDocument.uri] needed to read the file back.
   static Future<List<SavedDocument>> listBackups() async {
     final raw = await _channel.invokeListMethod<Object?>('listBackups');
     if (raw == null) return const [];
@@ -58,4 +59,25 @@ class DipiDocuments {
         if (item is Map) SavedDocument.fromMap(item.cast<Object?, Object?>()),
     ];
   }
+
+  /// Reads the file at [uri] as text, or null when it cannot be read.
+  ///
+  /// On Android 11 and newer a reinstall cannot see files written by the
+  /// install it replaced — they belong to no app any more, and neither a
+  /// MediaStore query nor the system file picker reaches them. Granting
+  /// [hasAllFilesAccess] is the only way back.
+  static Future<String?> readBackup(String uri) => _channel.invokeMethod<String>(
+    'readBackup',
+    {'uri': uri},
+  );
+
+  /// Whether this install may read files it did not write itself. True on
+  /// Android 10 and older, where the question does not arise.
+  static Future<bool> hasAllFilesAccess() async =>
+      await _channel.invokeMethod<bool>('hasAllFilesAccess') ?? true;
+
+  /// Opens the system "All files access" page for this app. Returns false when
+  /// the platform has no such screen to show.
+  static Future<bool> openAllFilesSettings() async =>
+      await _channel.invokeMethod<bool>('openAllFilesSettings') ?? false;
 }

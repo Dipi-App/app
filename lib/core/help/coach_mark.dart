@@ -8,6 +8,25 @@ import '../../shared/utils/motion.dart';
 /// highlights. Defaults to on in the real app.
 final coachMarksEnabledProvider = Provider<bool>((ref) => true);
 
+/// A fresh install can put more than one one-time dialog on the home screen at
+/// once — the first-use tips and the reinstall backup offer. Stacked, neither
+/// is usable, so they take turns holding the screen.
+class OneTimeDialogQueue {
+  Future<void> _tail = Future<void>.value();
+
+  /// Runs [body] once nothing else is showing, and holds the turn until it
+  /// finishes.
+  Future<T> show<T>(Future<T> Function() body) {
+    final turn = _tail.then((_) => body());
+    _tail = turn.then<void>((_) {}, onError: (_) {});
+    return turn;
+  }
+}
+
+final oneTimeDialogQueueProvider = Provider<OneTimeDialogQueue>(
+  (ref) => OneTimeDialogQueue(),
+);
+
 /// One highlight tip: [targetKey] is the on-screen widget to spotlight.
 class CoachMarkStep {
   const CoachMarkStep({
@@ -33,18 +52,23 @@ Future<void> showCoachMarks(
   if (!ref.read(coachMarksEnabledProvider)) return;
   if (ref.read(settingsValueProvider).coachMarksSeen.contains(id)) return;
 
-  await ref.read(settingsControllerProvider.notifier).markCoachMarkSeen(id);
-  if (!context.mounted) return;
+  await ref.read(oneTimeDialogQueueProvider).show(() async {
+    // Re-check: another one-time dialog may have taken the turn meanwhile.
+    if (!context.mounted) return;
+    if (ref.read(settingsValueProvider).coachMarksSeen.contains(id)) return;
+    await ref.read(settingsControllerProvider.notifier).markCoachMarkSeen(id);
+    if (!context.mounted) return;
 
-  await showGeneralDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    barrierColor: Colors.transparent,
-    transitionDuration: reduceMotion(context)
-        ? Duration.zero
-        : const Duration(milliseconds: 220),
-    pageBuilder: (context, _, _) => _CoachMarkOverlay(steps: steps),
-  );
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.transparent,
+      transitionDuration: reduceMotion(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 220),
+      pageBuilder: (context, _, _) => _CoachMarkOverlay(steps: steps),
+    );
+  });
 }
 
 class _CoachMarkOverlay extends StatefulWidget {

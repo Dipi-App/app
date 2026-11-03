@@ -3,10 +3,12 @@ package ir.dipi.dipi_documents
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.provider.Settings
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -35,14 +37,79 @@ class DipiDocumentsPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         when (call.method) {
             "saveBackup" -> handleSave(call, result)
             "listBackups" -> handleList(result)
+            "readBackup" -> handleRead(call, result)
+            "hasAllFilesAccess" -> result.success(hasAllFilesAccess())
+            "openAllFilesSettings" -> openAllFilesSettings(result)
             else -> result.notImplemented()
+        }
+    }
+
+    /**
+     * Whether this install may read files it did not write. Android 11 hides
+     * them, and a reinstall's old backups are in exactly that group.
+     */
+    private fun hasAllFilesAccess(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.R ||
+            Environment.isExternalStorageManager()
+
+    /**
+     * Opens the system "All files access" page for this app. There is no dialog
+     * to answer here: the platform only lets the user turn it on in Settings,
+     * so the caller waits for the app to come back to the foreground.
+     */
+    private fun openAllFilesSettings(result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            result.success(false)
+            return
+        }
+        val packageUri = Uri.parse("package:${context.packageName}")
+        val candidates = listOf(
+            Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, packageUri),
+            Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION),
+        )
+        for (intent in candidates) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                context.startActivity(intent)
+                result.success(true)
+                return
+            } catch (error: Exception) {
+                // Some builds ship only the generic screen.
+            }
+        }
+        result.success(false)
+    }
+
+    private fun handleRead(call: MethodCall, result: MethodChannel.Result) {
+        val uriValue = call.argument<String>("uri")
+        if (uriValue == null) {
+            result.error("bad_args", "uri is required", null)
+            return
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            result.success(null)
+            return
+        }
+        val text = try {
+            read(Uri.parse(uriValue))
+        } catch (error: Exception) {
+            // A file written by an earlier install may no longer be readable.
+            null
+        }
+        result.success(text)
+    }
+
+    private fun read(uri: Uri): String? = when (uri.scheme) {
+        "file" -> File(uri.path ?: return null).takeIf { it.isFile }?.readText()
+        else -> context.contentResolver.openInputStream(uri)?.use { input ->
+            String(input.readBytes(), Charsets.UTF_8)
         }
     }
 
     private fun handleSave(call: MethodCall, result: MethodChannel.Result) {
         val tempPath = call.argument<String>("tempPath")
         val fileName = call.argument<String>("fileName")
-        val keep = call.argument<Int>("keep") ?: 14
+        val keep = call.argument<Int>("keep") ?: 10
         if (tempPath == null || fileName == null) {
             result.error("bad_args", "tempPath and fileName are required", null)
             return
@@ -132,7 +199,34 @@ class DipiDocumentsPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 
     private fun list(): List<Map<String, Any?>> {
+        val found = linkedMapOf<String, Map<String, Any?>>()
+        for (row in fromMediaStore()) found[row["name"] as String] = row
+        // A reinstall that has just been given "All files access" may still see
+        // its own rows only: the platform applies that permission to a process
+        // when it starts. Reading the folder itself is the second opinion.
+        if (hasAllFilesAccess()) {
+            val documents = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOCUMENTS,
+            )
+            File(documents, FOLDER).listFiles { file ->
+                file.isFile && file.name.startsWith(PREFIX)
+            }?.forEach { file ->
+                found.putIfAbsent(
+                    file.name,
+                    mapOf(
+                        "name" to file.name,
+                        "size" to file.length(),
+                        "uri" to Uri.fromFile(file).toString(),
+                    ),
+                )
+            }
+        }
+        return found.values.sortedByDescending { it["name"] as String }
+    }
+
+    private fun fromMediaStore(): List<Map<String, Any?>> {
         val projection = arrayOf(
+            MediaStore.MediaColumns._ID,
             MediaStore.MediaColumns.DISPLAY_NAME,
             MediaStore.MediaColumns.SIZE,
         )
@@ -142,14 +236,17 @@ class DipiDocumentsPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         context.contentResolver
             .query(collection(), projection, selection, args, null)
             ?.use { cursor ->
+                val idIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
                 val nameIndex =
                     cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME)
                 val sizeIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE)
                 while (cursor.moveToNext()) {
+                    val id = cursor.getLong(idIndex)
                     found.add(
                         mapOf(
                             "name" to cursor.getString(nameIndex),
                             "size" to cursor.getLong(sizeIndex),
+                            "uri" to ContentUris.withAppendedId(collection(), id).toString(),
                         ),
                     )
                 }
