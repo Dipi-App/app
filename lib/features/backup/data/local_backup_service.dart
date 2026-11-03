@@ -26,17 +26,36 @@ class LocalBackupException implements Exception {
 }
 
 class LocalBackupResult {
-  const LocalBackupResult({required this.fileName, required this.sizeInBytes});
+  const LocalBackupResult({
+    required this.fileName,
+    required this.sizeInBytes,
+    required this.created,
+  });
+
+  /// The data matched the last written backup, so nothing was created.
+  const LocalBackupResult.skipped()
+    : fileName = '',
+      sizeInBytes = 0,
+      created = false;
 
   final String fileName;
   final int sizeInBytes;
+
+  /// False when the ledger matched the last backup and no file was written.
+  final bool created;
 }
 
 /// How long between automatic backups, and how many files to keep.
 const Duration autoBackupInterval = Duration(hours: 12);
-const int autoBackupRetention = 14;
+const int autoBackupRetention = 10;
+
+/// Key holding the fingerprint of the data in the newest written backup.
+const String lastBackupFingerprintKey = 'lastBackupFingerprint';
 
 /// Writes one JSON backup into `Documents/dipi`.
+///
+/// When the ledger produces the same fingerprint as the last written backup,
+/// no file is created and the result reports [LocalBackupResult.created] false.
 ///
 /// This is a plain function on purpose: the workmanager background isolate has
 /// no Riverpod scope, so it calls this directly with its own database.
@@ -45,10 +64,15 @@ Future<LocalBackupResult> runLocalBackup({AppDatabase? database}) async {
   final ownsDatabase = database == null;
   File? temp;
   try {
-    final settings = AppSettings.fromMap(await KeyValueDao(db).all());
-    final document = await BackupRepository(
-      db,
-    ).buildDocument(settings: settings.toMap());
+    final dao = KeyValueDao(db);
+    final settings = AppSettings.fromMap(await dao.all());
+    final document = await BackupRepository(db)
+        .buildDocument(settings: settings.toMap());
+
+    final fingerprint = document.contentFingerprint;
+    if (await dao.read(lastBackupFingerprintKey) == fingerprint) {
+      return const LocalBackupResult.skipped();
+    }
 
     final tempDir = await getTemporaryDirectory();
     final name = AppInfo.autoBackupFileName(DateTime.now());
@@ -61,17 +85,19 @@ Future<LocalBackupResult> runLocalBackup({AppDatabase? database}) async {
       fileName: name,
       keep: autoBackupRetention,
     );
-    await KeyValueDao(
-      db,
-    ).write('lastBackupAt', DateTime.now().toIso8601String());
+    await dao.write('lastBackupAt', DateTime.now().toIso8601String());
+    await dao.write(lastBackupFingerprintKey, fingerprint);
     return LocalBackupResult(
       fileName: saved.fileName,
       sizeInBytes: saved.sizeInBytes,
+      created: true,
     );
   } on PlatformException catch (error) {
     throw LocalBackupException(_describe(error));
   } on MissingPluginException {
-    throw LocalBackupException('پشتیبان خودکار در این دستگاه پشتیبانی نمی‌شود.');
+    throw LocalBackupException(
+      'پشتیبان خودکار در این دستگاه پشتیبانی نمی‌شود.',
+    );
   } finally {
     if (temp != null && temp.existsSync()) {
       try {
@@ -94,9 +120,10 @@ class LocalBackupService {
   final Ref _ref;
 
   Future<LocalBackupResult> createBackup() async {
-    final result = await runLocalBackup(
-      database: _ref.read(databaseProvider),
-    );
+    final result = await runLocalBackup(database: _ref.read(databaseProvider));
+    // A skipped run writes nothing, so the last-backup time must stay where it
+    // is; the reminder and the 12-hour due check both read it.
+    if (!result.created) return result;
     await _ref
         .read(settingsControllerProvider.notifier)
         .setLastBackupAt(DateTime.now());

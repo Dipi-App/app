@@ -13,9 +13,11 @@ import '../data/local_backup_service.dart';
 import '../domain/backup_document.dart';
 import '../state/backup_providers.dart';
 
-/// Writes a backup right now and returns a short Persian success message.
+/// Writes a backup right now and returns a short Persian message. When the
+/// ledger is unchanged since the last backup, no file is written.
 Future<String> createLocalBackupNow(WidgetRef ref) async {
   final result = await ref.read(localBackupServiceProvider).createBackup();
+  if (!result.created) return 'تغییری از آخرین پشتیبان ثبت نشده است.';
   return 'پشتیبان ذخیره شد: ${result.fileName}';
 }
 

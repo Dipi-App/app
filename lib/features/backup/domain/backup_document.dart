@@ -1,9 +1,11 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart' show sha256;
 import 'package:drift/drift.dart' show Value;
 
 import '../../../core/constants/app_info.dart';
 import '../../../data/db/app_database.dart';
+import 'backup_fingerprint.dart';
 
 /// Thrown when an imported file is not a Dipi backup, is from a newer schema,
 /// or has rows we cannot understand. [message] is shown to the user in Persian.
@@ -43,6 +45,23 @@ class BackupDocument {
 
   int get totalRows =>
       employers.length + workEntries.length + payments.length;
+
+  /// Change detection for the backup: the same fingerprint means the ledger
+  /// holds nothing new and no file needs to be written.
+  String get contentFingerprint => sha256
+      .convert(
+        utf8.encode(
+          buildBackupFingerprintSource(
+            schemaVersion: schemaVersion,
+            appVersion: appVersion,
+            employers: [for (final row in employers) row.toJson()],
+            workEntries: [for (final row in workEntries) row.toJson()],
+            payments: [for (final row in payments) row.toJson()],
+            settings: settings,
+          ),
+        ),
+      )
+      .toString();
 
   Map<String, Object?> toJson() => {
     'app': AppInfo.nameEn,

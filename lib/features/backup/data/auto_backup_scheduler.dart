@@ -26,6 +26,8 @@ void autoBackupCallbackDispatcher() {
 
 /// Registers the 12-hour periodic backup. WorkManager persists it across
 /// reboots. Safe to call on every start; the task is updated in place.
+/// Every run writes nothing when the ledger is unchanged since the last
+/// backup — see [runLocalBackup].
 Future<void> initAutoBackupScheduler() async {
   if (kIsWeb || !Platform.isAndroid) return;
   try {

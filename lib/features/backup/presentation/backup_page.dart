@@ -88,8 +88,9 @@ class _BackupPageState extends ConsumerState<BackupPage> {
               children: [
                 Text(
                   'هر ۱۲ ساعت، خودِ برنامه یک نسخه از همه اطلاعات را در پوشه '
-                  '«Documents/dipi» گوشی می‌سازد. بدون اینترنت و بدون اجازه '
-                  'اضافه. فقط ۱۴ نسخه‌ی آخر نگه داشته می‌شود.',
+                  '«Documents/dipi» گوشی می‌سازد. اگر از آخرین پشتیبان چیز '
+                  'تازه‌ای ثبت نشده باشد، فایلی ساخته نمی‌شود. بدون اینترنت و '
+                  'بدون اجازه اضافه. فقط ۱۰ نسخه‌ی آخر نگه داشته می‌شود.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     height: 1.8,
