@@ -84,6 +84,12 @@ auto-bumps from Conventional Commits and tags for you.
 6. **No CI loop:** the version commit message ends with `[skip ci]`, and the job
    ignores commits containing that marker. Tags pushed by the workflow's own
    `GITHUB_TOKEN` do not re-trigger the workflow.
+7. **Re-cutting a tag that never built:** the skip marker is read from the message
+   of the commit the tag points at, so a tag placed on a version commit (or any
+   commit whose message quotes the marker) creates no run at all. Point the tag
+   at a later commit whose message is clean, and remember that moving an existing
+   tag does not re-trigger either — delete the remote tag (`git push origin
+   --delete vX.Y.Z`) and push it again.
 
 Users install from [`INSTALL.fa.md`](INSTALL.fa.md); the release notes link to it.
 
