@@ -102,6 +102,13 @@ build fails (`android/app/build.gradle.kts`). Signing comes from `DIPI_*`
 environment variables (CI) or `android/key.properties` (local, git-ignored).
 Releases are tag-triggered; see `docs/RELEASE.md` and `docs/INSTALL.fa.md`.
 
+The commit a release tag points at must not carry `[skip ci]` in its message:
+Actions then skips the tag push and no run is created at all, which leaves a
+tag with no release behind it. The auto-release commits use `[skip ci]` on
+purpose (to avoid looping), so a re-cut tag has to move to a commit past them.
+Moving an existing tag does not re-trigger anything either — delete the remote
+tag and push it again.
+
 ## Application id
 
 Edit `android/gradle.properties` → `dipiAppId` (single place). The Kotlin
