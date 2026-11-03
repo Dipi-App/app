@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/settings/state/settings_providers.dart';
 import '../../shared/utils/motion.dart';
+import '../utils/persian_digits.dart';
 
 /// Lets tests (and a future "turn tips off" setting) disable the first-use
 /// highlights. Defaults to on in the real app.
@@ -168,7 +169,7 @@ class _CoachMarkOverlayState extends State<_CoachMarkOverlay> {
                           ),
                         ),
                         Text(
-                          '${_index + 1} از ${widget.steps.length}',
+                          '${toPersianDigits(_index + 1)} از ${toPersianDigits(widget.steps.length)}',
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ],
