@@ -125,7 +125,10 @@ jobs:
       # ---------------------------------------------------------------------
 
       - name: Install dependencies
-        run: flutter pub get
+        # Fail rather than re-resolve: pub discards the pins when its host differs
+        # from pubspec.lock, and the release would then be built from versions
+        # nobody analysed or tested.
+        run: flutter pub get --enforce-lockfile
 
       - name: Analyze
         run: flutter analyze
