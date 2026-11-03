@@ -1,3 +1,10 @@
+## 1.7.0 — 2026-11-03
+
+- docs(backup): record the skip-unchanged rule and reinstall recovery
+- fix(coach-mark): count the tips in Persian digits
+- feat(backup): offer to import a backup left by an earlier install
+- feat(backup): skip unchanged backups and keep the last ten
+
 ## 1.6.1 — 2026-10-16
 
 - chore: add demo seeder and screenshot capture tools
