@@ -218,7 +218,7 @@ void main() {
       expect(ledgers, hasLength(1));
       expect(ledgers.single.employerId, 7);
       expect(ledgers.single.totals.balanceRial, -500);
-      expect(ledgers.single.totals.state, SettlementState.debtor);
+      expect(ledgers.single.totals.state, SettlementState.received);
     });
 
     test('nothing to report gives an empty list', () {

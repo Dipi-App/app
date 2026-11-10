@@ -45,8 +45,12 @@ void main() {
   group('settlementStateOf', () {
     test('maps the sign to a state', () {
       expect(settlementStateOf(1), SettlementState.creditor);
-      expect(settlementStateOf(-1), SettlementState.debtor);
+      expect(settlementStateOf(-1), SettlementState.received);
       expect(settlementStateOf(0), SettlementState.settled);
+    });
+
+    test('a negative balance is received from the employer, not a debt', () {
+      expect(settlementStateOf(-1).label, 'دریافت از کارفرما');
     });
   });
 
@@ -88,13 +92,13 @@ void main() {
       expect(summary.state, SettlementState.creditor);
     });
 
-    test('a big advance flips the balance to the worker owing', () {
+    test('a big advance flips the balance to received from employer', () {
       final summary = summarizeSettlement(
         entries: [entry(wage: 1000000)],
         payments: [payment(amount: 3000000, type: PaymentType.advance)],
       );
       expect(summary.balanceRial, -2000000);
-      expect(summary.state, SettlementState.debtor);
+      expect(summary.state, SettlementState.received);
       expect(summary.amountOf(PaymentType.advance), 3000000);
     });
 
@@ -130,7 +134,7 @@ void main() {
       expect(summary.amountOf(PaymentType.advance), 0);
       expect(summary.amountOf(PaymentType.expenseRefund), 50);
       expect(summary.paymentCount, 3);
-      expect(summary.state, SettlementState.debtor);
+      expect(summary.state, SettlementState.received);
     });
 
     test('an unknown payment type falls back to wage', () {

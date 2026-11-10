@@ -276,12 +276,12 @@ class _BalanceHero extends StatelessWidget {
     final color = AppColors.settlementColor(context, state);
     final icon = switch (state) {
       SettlementState.creditor => Icons.trending_up_rounded,
-      SettlementState.debtor => Icons.trending_down_rounded,
+      SettlementState.received => Icons.call_received_rounded,
       SettlementState.settled => Icons.check_circle_outline_rounded,
     };
     final hint = switch (state) {
       SettlementState.creditor => 'کارفرماها به تو بدهکارند',
-      SettlementState.debtor => 'تو به کارفرماها بدهکاری',
+      SettlementState.received => 'از کارفرماها دریافت کرده‌ای',
       SettlementState.settled => 'حساب‌ها تسویه است',
     };
 

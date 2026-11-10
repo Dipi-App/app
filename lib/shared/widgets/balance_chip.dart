@@ -7,7 +7,7 @@ import 'money_text.dart';
 
 IconData _stateIcon(SettlementState state) => switch (state) {
   SettlementState.creditor => Icons.trending_up_rounded,
-  SettlementState.debtor => Icons.trending_down_rounded,
+  SettlementState.received => Icons.call_received_rounded,
   SettlementState.settled => Icons.check_circle_outline_rounded,
 };
 
@@ -47,7 +47,14 @@ class BalanceChip extends StatelessWidget {
         children: [
           Icon(_stateIcon(state), size: compact ? 13 : 15, color: color),
           const SizedBox(width: 4),
-          Text(state.label, style: style),
+          Flexible(
+            child: Text(
+              state.label,
+              style: style,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
           if (showAmount) ...[
             const SizedBox(width: 6),
             MoneyText(

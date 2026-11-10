@@ -4,16 +4,17 @@ import 'work_entry_stats.dart';
 
 SettlementState settlementStateOf(int balanceRial) {
   if (balanceRial > 0) return SettlementState.creditor;
-  if (balanceRial < 0) return SettlementState.debtor;
+  if (balanceRial < 0) return SettlementState.received;
   return SettlementState.settled;
 }
 
 /// Balance rule for one employer in a period:
 /// `balance = sum(wage_amount) + sum(out_of_pocket_amount) − sum(payments)`.
 ///
-/// Positive → the employer owes the worker. Negative → the worker owes the
-/// employer (for example after a big advance). Wages whose amount is not filled
-/// in yet are reported separately and are not counted.
+/// Positive → the employer owes the worker. Negative → the worker has received
+/// more than the recorded wages (for example after a big advance); it is shown
+/// as "received from employer", never as a debt. Wages whose amount is not
+/// filled in yet are reported separately and are not counted.
 class SettlementSummary {
   const SettlementSummary({
     required this.entryTotals,

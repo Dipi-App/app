@@ -46,8 +46,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     _Slide(
       icon: Icons.account_balance_wallet_rounded,
       title: 'حسابت را بدان',
-      body: 'سبز یعنی کارفرما به تو بدهکار است و سرخ یعنی تو به او. همه چیز با '
-          'عدد و رنگ روشن است.',
+      body: 'سبز یعنی کارفرما به تو بدهکار است و آبی یعنی از او پول گرفته‌ای. '
+          'همه چیز با عدد و رنگ روشن است.',
     ),
     _Slide(
       icon: Icons.lock_outline_rounded,

@@ -62,7 +62,7 @@ abstract final class HelpContent {
     id: 'see-balance',
     title: 'چطور بفهمم چقدر طلب دارم؟',
     icon: Icons.account_balance_wallet_outlined,
-    intro: 'سبز یعنی کارفرما به تو بدهکار است، سرخ یعنی تو به او.',
+    intro: 'سبز یعنی کارفرما به تو بدهکار است، آبی یعنی از او پول گرفته‌ای.',
     steps: [
       'به بخش «آمار» برو.',
       'بالای صفحه «مانده کل» را ببین.',

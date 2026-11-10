@@ -106,6 +106,41 @@ void main() {
     await _dispose(tester);
   });
 
+  testWidgets('shows received from employer when payments exceed wages', (
+    tester,
+  ) async {
+    final employerId = await employers.create(
+      name: 'آقای رضایی',
+      color: 0xFFC0562B,
+      defaultWageType: 'fixed',
+    );
+    final today = toIsoDate(DateTime.now());
+    await entries.create(
+      WorkEntriesCompanion.insert(
+        employerId: employerId,
+        date: today,
+        createdAt: DateTime.now().toIso8601String(),
+        wageAmount: const Value(1000000),
+      ),
+    );
+    await payments.create(
+      PaymentsCompanion.insert(
+        employerId: employerId,
+        date: today,
+        amount: 3000000,
+        createdAt: DateTime.now().toIso8601String(),
+        type: const Value('advance'),
+      ),
+    );
+
+    await _pump(tester, database);
+
+    expect(find.text('دریافت از کارفرما'), findsWidgets);
+    expect(find.text('از کارفرماها دریافت کرده‌ای'), findsOneWidget);
+
+    await _dispose(tester);
+  });
+
   testWidgets('says so when the range has no data', (tester) async {
     await _pump(tester, database);
 

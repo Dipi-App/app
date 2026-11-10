@@ -44,7 +44,7 @@ enum ThemeChoice {
 
 enum SettlementState {
   creditor('طلب شما'),
-  debtor('بدهی شما'),
+  received('دریافت از کارفرما'),
   settled('تسویه');
 
   const SettlementState(this.label);

@@ -256,7 +256,7 @@ class _SummaryBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              BalanceChip(balanceRial: balanceRial),
+              BalanceChip(balanceRial: balanceRial, compact: true),
             ],
           ),
         ],

@@ -66,6 +66,6 @@ String formatMoneyCompact(int rialAmount, CurrencyUnit unit) {
 
 String formatBalanceLabel(int rialAmount) {
   if (rialAmount > 0) return 'طلبکار';
-  if (rialAmount < 0) return 'بدهکار';
+  if (rialAmount < 0) return 'دریافت از کارفرما';
   return 'تسویه';
 }

@@ -94,7 +94,7 @@ void main() {
     await _dispose(tester);
   });
 
-  testWidgets('shows a debtor balance after a big advance', (tester) async {
+  testWidgets('shows received from employer after a big advance', (tester) async {
     final employerId = await employers.create(
       name: 'آقای رضایی',
       color: 0xFFC0562B,
@@ -120,8 +120,10 @@ void main() {
 
     await _pump(tester, database, employerId);
 
-    expect(find.text('بدهی شما'), findsWidgets);
-    // 1,000,000 − 3,000,000 = −2,000,000 Rial = 200,000 Toman owed.
+    expect(find.text('دریافت از کارفرما'), findsWidgets);
+    expect(find.text('این مبلغ از کارفرما دریافت کرده‌اید.'), findsOneWidget);
+    // 1,000,000 − 3,000,000 = −2,000,000 Rial = 200,000 Toman received
+    // beyond recorded wages.
     expect(find.textContaining('۲۰۰٬۰۰۰'), findsWidgets);
 
     await _dispose(tester);

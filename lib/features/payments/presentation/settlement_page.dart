@@ -83,7 +83,7 @@ class SettlementPage extends ConsumerWidget {
                   Text(
                     summary.state == SettlementState.creditor
                         ? 'این مبلغ به شما بدهکار است.'
-                        : 'این مبلغ به کارفرما بدهکارید.',
+                        : 'این مبلغ از کارفرما دریافت کرده‌اید.',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -118,14 +118,15 @@ class SettlementPage extends ConsumerWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Row(
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Expanded(
-                        child: Text(
-                          'مانده نهایی',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                      Text(
+                        'مانده نهایی',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       BalanceChip(balanceRial: summary.balanceRial),

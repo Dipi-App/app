@@ -51,7 +51,7 @@ void main() {
   group('balance label', () {
     test('maps sign to persian label', () {
       expect(formatBalanceLabel(1), 'طلبکار');
-      expect(formatBalanceLabel(-1), 'بدهکار');
+      expect(formatBalanceLabel(-1), 'دریافت از کارفرما');
       expect(formatBalanceLabel(0), 'تسویه');
     });
   });
