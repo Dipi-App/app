@@ -1,3 +1,8 @@
+## 1.8.0 — 2026-11-10
+
+- docs(readme): say received from employer, not debt
+- feat(balance): show received from employer, not debt
+
 ## 1.7.0 — 2026-11-03
 
 - docs(backup): record the skip-unchanged rule and reinstall recovery
