@@ -1,3 +1,7 @@
+## 1.8.1 — 2026-11-10
+
+- fix(update): restore in-app updates from the canonical release feed
+
 ## 1.8.0 — 2026-11-10
 
 - docs(readme): say received from employer, not debt
