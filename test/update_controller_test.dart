@@ -14,12 +14,12 @@ AppRelease _release() => const AppRelease(
   tag: 'v1.2.0',
   version: SemanticVersion(1, 2, 0),
   body: 'تازه‌ها',
-  htmlUrl: 'https://github.com/mst-ghi/dipi/releases/tag/v1.2.0',
+  htmlUrl: 'https://github.com/Dipi-App/app/releases/tag/v1.2.0',
   assets: [
     ReleaseAsset(
       name: 'dipi-1.2.0.apk',
       sizeInBytes: 16,
-      downloadUrl: 'https://github.com/mst-ghi/dipi/releases/download/v1.2.0/dipi-1.2.0.apk',
+      downloadUrl: 'https://github.com/Dipi-App/app/releases/download/v1.2.0/dipi-1.2.0.apk',
     ),
   ],
 );

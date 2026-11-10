@@ -209,8 +209,8 @@ class SettingsPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'کاملاً آفلاین. تنها ارتباط شبکه‌ای، بررسی نسخه جدید در گیت‌هاب '
-                  'است؛ داده‌های شما فقط روی همین گوشی می‌ماند.',
+                  'کاملاً آفلاین. تنها ارتباط شبکه‌ای، بررسی نسخه جدید و دانلود '
+                  'نسخه تازه از گیت‌هاب است؛ داده‌های شما فقط روی همین گوشی می‌ماند.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     height: 1.8,
@@ -332,7 +332,8 @@ class _UpdateSection extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 4),
           child: Text(
-            'دانلود از گیت‌هاب در مرورگر باز می‌شود؛ برنامه چیزی را خودش نصب نمی‌کند.',
+            'فایل از گیت‌هاب دانلود و پیش از نصب بررسی می‌شود؛ تأیید نصب را '
+            'خود اندروید از تو می‌گیرد.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),

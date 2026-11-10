@@ -94,6 +94,23 @@ class UpdateController extends Notifier<UpdateState> {
     return ref.read(urlLauncherProvider).open(Uri.parse(release.downloadUrl));
   }
 
+  /// Downloads the APK for this device's ABI and hands it to Android's
+  /// installer. The native side verifies package name, versionCode and signing
+  /// certificate first; the user still confirms the install.
+  Future<bool> installUpdate(AppRelease release) async {
+    final installer = ref.read(apkUpdateInstallerProvider);
+    final abi = await installer.supportedAbi();
+    final apk = release.apkForAbi(abi);
+    if (apk == null) return false;
+    final url = Uri.tryParse(apk.downloadUrl);
+    if (url == null || !UpdateConfig.isAllowedLinkUrl(url)) return false;
+    return installer.start(
+      url: url,
+      version: release.version.toString(),
+      sha256: apk.sha256,
+    );
+  }
+
   Future<SemanticVersion> _installedVersion() async {
     try {
       final raw = await ref.read(appVersionProvider.future);

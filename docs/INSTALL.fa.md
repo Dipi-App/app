@@ -6,7 +6,7 @@
 ## ۱. دانلود کن
 
 ۱. به صفحه‌ی نسخه‌ها برو:
-   <https://github.com/mst-ghi/dipi/releases/latest>
+   <https://github.com/Dipi-App/app/releases/latest>
 ۲. از بخش **Assets** فایل `dipi-<version>.apk` را بردار (این فایل روی همه‌ی
    گوشی‌ها نصب می‌شود). اگر می‌خواهی حجم کمتر باشد، فایل مناسب پردازنده‌ی
    گوشی‌ات را بگیر:
@@ -16,9 +16,11 @@
 ۳. هر وقت خواستی می‌توانی درستی فایل را با فایل `...apk.sha256` بررسی کنی
    (بخش ۴).
 
-> نکته: دیپی **خودش چیزی نصب نمی‌کند**. فقط اگر نسخه‌ی تازه‌تری باشد، با یک
-> پیام کوتاه به تو خبر می‌دهد و دکمه‌ای می‌گذارد که همین صفحه را در مرورگر
-> باز می‌کند. دانلود و نصب را خودت با مرورگر انجام می‌دهی.
+> نکته: دیپی **بدون اجازه‌ی تو هیچ فایلی دانلود یا نصب نمی‌کند**. اگر نسخه‌ی
+> تازه‌تری باشد، با یک پیام کوتاه خبر می‌دهد و دکمه‌ی «دانلود و نصب» می‌گذارد؛
+> فایل را خودش از گیت‌هاب می‌گیرد، امضا و نسخه‌اش را بررسی می‌کند و بعد پنجره‌ی
+> نصب اندروید را باز می‌کند تا خودت تأیید کنی. اگر ترجیح می‌دهی، دکمه‌ی باز کردن
+> صفحه‌ی انتشار در مرورگر هم هست.
 
 ## ۲. اجازه‌ی نصب از این منبع را بده
 
@@ -87,9 +89,12 @@ Get-FileHash <file> -Algorithm SHA256
 ۱. در دیپی: **تنظیمات → بررسی نسخه جدید** (یا خودش وقتی برنامه را باز می‌کنی،
    حداکثر روزی یک‌بار بررسی می‌کند).
 ۲. اگر نسخه‌ی تازه باشد، دیپی شماره‌ی نسخه و «تازه‌ها» را نشان می‌دهد و دکمه‌ی
-   **دانلود از گیت‌هاب** را می‌گذارد.
-۳. با آن دکمه مرورگر باز می‌شود؛ APK تازه را دانلود کن و مثل بالا نصب کن.
-   داده‌هایت سر جایشان می‌مانند.
+   **دانلود و نصب** را می‌گذارد.
+۳. بار اول، اندروید اجازه‌ی «نصب برنامه‌های ناشناس» را برای دیپی می‌خواهد؛
+   دیپی دکمه‌ی رفتن به همان تنظیمات را می‌گذارد. بعد از روشن کردن، برگرد.
+۴. فایل دانلود و بررسی می‌شود و پنجره‌ی نصب اندروید باز می‌شود؛ نصب را تأیید کن.
+   داده‌هایت سر جایشان می‌مانند. اگر ترجیح می‌دهی، از همان پنجره می‌توانی صفحه‌ی
+   انتشار را در مرورگر باز کنی و مثل بخش ۱ تا ۳ نصب کنی.
 
 ---
 
@@ -98,7 +103,7 @@ Get-FileHash <file> -Algorithm SHA256
 Dipi is distributed **only through GitHub Releases**.
 
 1. Download `dipi-<version>.apk` from the
-   [latest release](https://github.com/mst-ghi/dipi/releases/latest). The plain
+   [latest release](https://github.com/Dipi-App/app/releases/latest). The plain
    `dipi-<version>.apk` works on every phone.
 2. Open the file; Android asks you to **allow installs from this source** — turn
    it on for your file manager / browser.
@@ -107,7 +112,9 @@ Dipi is distributed **only through GitHub Releases**.
 4. Optionally verify the download against the published **SHA-256**
    (`shasum -a 256 <file>`, `Get-FileHash <file> -Algorithm SHA256`, or a phone
    hashing app). A 64-character match means the file is intact.
-5. Dipi itself never installs anything. When a newer version exists it shows a
-   short message and a **Download from GitHub** button that opens this page in
-   your browser. Installing a new version keeps your data (all releases share one
-   signing key).
+5. Updates are never silent. When a newer version exists Dipi offers **Download
+   and install**: it downloads the APK, verifies the package, a higher versionCode
+   and the signing certificate, and then opens Android's installer for you to
+   confirm. The first time, Android asks you to allow installs from Dipi. A
+   browser link to this page remains as a fallback. Installing a new version
+   keeps your data (all releases share one signing key).

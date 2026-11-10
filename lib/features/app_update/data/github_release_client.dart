@@ -48,7 +48,11 @@ class GitHubReleaseClient {
     if (response.statusCode == 403 || response.statusCode == 429) {
       throw GitHubReleaseException('محدودیت موقت گیت‌هاب.', rateLimited: true);
     }
-    if (response.statusCode == 404) return null;
+    // A 404 means the repository or its release feed is gone — never "this
+    // install is current". Treating it as null hid a stale owner/repo name.
+    if (response.statusCode == 404) {
+      throw GitHubReleaseException('مخزن انتشار دیپی پیدا نشد.');
+    }
     if (response.statusCode != 200) {
       throw GitHubReleaseException('پاسخ نامنتظره از گیت‌هاب '
           '(${response.statusCode}).');

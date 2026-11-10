@@ -1,10 +1,11 @@
 /// One place for the update source and its rules.
 ///
-/// The owner and repo are read from the git remote:
-/// `git@github.com:mst-ghi/dipi.git` -> owner `mst-ghi`, repo `dipi`.
+/// This must match the repository that publishes the releases (the `origin`
+/// remote is `git@github.com:Dipi-App/app.git`). A stale owner/repo here made
+/// GitHub answer 404 and the app quietly report "up to date".
 abstract final class UpdateConfig {
-  static const String githubOwner = 'mst-ghi';
-  static const String githubRepo = 'dipi';
+  static const String githubOwner = 'Dipi-App';
+  static const String githubRepo = 'app';
 
   static const String latestReleaseApi =
       'https://api.github.com/repos/$githubOwner/$githubRepo/releases/latest';

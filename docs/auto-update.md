@@ -1,46 +1,63 @@
-# بررسی نسخه‌ی جدید / Update check
+# به‌روزرسانی دیپی / Update
 
 ## به زبان ساده (فارسی)
 
-دیپی خودش می‌فهمد که نسخه‌ی تازه‌تری هست، ولی **هیچ‌وقت خودش چیزی دانلود یا
-نصب نمی‌کند**. فقط خبر می‌دهد و یک دکمه می‌گذارد که صفحه‌ی دانلود را در مرورگر
-باز می‌کند.
+دیپی خودش می‌فهمد نسخه‌ی تازه‌تری هست. اگر نسخه‌ی تازه باشد، شماره‌ی نسخه و
+«تازه‌ها» را نشان می‌دهد و دکمه‌ی **«دانلود و نصب»** می‌گذارد. تا تو این دکمه را
+نزنی، هیچ فایلی دانلود و هیچ چیزی نصب نمی‌شود.
 
 ### چطور کار می‌کند؟
 
 ۱. وقتی برنامه باز می‌شود، **حداکثر روزی یک‌بار** نسخه‌ی آخر را از
    **GitHub Releases** می‌پرسد
-   (`https://api.github.com/repos/mst-ghi/dipi/releases/latest`).
-۲. نسخه‌ی تگ (مثل `v1.2.0`) را با نسخه‌ی نصب‌شده مقایسه می‌کند (مقایسه‌ی
+   (`https://api.github.com/repos/Dipi-App/app/releases/latest`).
+۲. نسخه‌ی تگ (مثل `v1.8.0`) را با نسخه‌ی نصب‌شده مقایسه می‌کند (مقایسه‌ی
    عددی درست، نه متن‌به‌متن).
-۳. اگر نسخه‌ی تازه‌تر نبود، **هیچ پیامی نشان نمی‌دهد** و برنامه مثل همیشه کار
-   می‌کند.
-۴. اگر نسخه‌ی تازه‌تر بود، یک پنجره‌ی ساده‌ی فارسی نشان می‌دهد: شماره‌ی نسخه،
-   «تازه‌ها در این نسخه» و یک دکمه‌ی **«دانلود از گیت‌هاب»**.
-۵. با زدن آن دکمه، **مرورگر** گوشی باز می‌شود و فایل APK از گیت‌هاب دانلود
-   می‌شود. نصب را خودت با مرورگر انجام می‌دهی
-   (راهنما: [`INSTALL.fa.md`](INSTALL.fa.md)).
+۳. اگر نسخه‌ی تازه‌تر نبود، **هیچ پیامی نشان نمی‌دهد**.
+۴. اگر نسخه‌ی تازه‌تر بود، پنجره‌ی فارسی باز می‌شود: نسخه، «تازه‌ها» و دکمه‌ی
+   **«دانلود و نصب»**.
+۵. با زدن دکمه، برنامه فایل مناسب پردازنده‌ی گوشی را از گیت‌هاب دانلود می‌کند
+   (نوار پیشرفت نشان داده می‌شود).
+۶. پیش از نصب، برنامه خودش بررسی می‌کند که فایل:
+   - همان بسته‌ی دیپی باشد (نه برنامه‌ی دیگر)،
+   - شماره‌ی نسخه‌اش از نسخه‌ی نصب‌شده بیشتر باشد،
+   - با همان کلیدی امضا شده باشد که نسخه‌ی نصب‌شده دارد.
+   اگر SHA-256 منتشرشده در گیت‌هاب موجود باشد، آن هم بررسی می‌شود.
+۷. اگر همه‌چیز درست بود، پنجره‌ی نصب اندروید باز می‌شود و **خودت** نصب را تأیید
+   می‌کنی. داده‌هایت سر جایشان می‌مانند.
 
 آیکون کوچک فلش دانلود در نوار بالای صفحه هم تا وقتی نسخه‌ی تازه هست نمایش داده
 می‌شود؛ با زدنش همان پنجره باز می‌شود.
 
+### اجازه‌ی نصب
+
+بار اول، اندروید برای نصب از بیرون فروشگاه یک اجازه می‌خواهد. دیپی توضیح می‌دهد
+و دکمه‌ی **«رفتن به تنظیمات»** را می‌گذارد تا گزینه‌ی «نصب برنامه‌های ناشناس» را
+برای دیپی روشن کنی. بعد از برگشتن، دانلود خودش شروع می‌شود. این اجازه فقط برای
+همین نصب است؛ نصب همچنان با تأیید خودت انجام می‌شود.
+
 ### بررسی دستی
 
 از **تنظیمات → بررسی نسخه جدید** می‌توانی هر وقت خواستی بررسی کنی. بررسی دستی
-محدودیت روزی یک‌بار را نادیده می‌گیرد.
+محدودیت روزی یک‌بار را نادیده می‌گیرد. اگر اینترنت نباشد، پیام «بررسی انجام نشد»
+می‌آید و برنامه کرش نمی‌کند.
 
-### بدون اینترنت یا خطای API
+### اگر دانلود یا نصب نشد
 
-اگر اینترنت نباشد یا گیت‌هاب خطا بدهد، **هیچ پیامی نشان داده نمی‌شود و برنامه
-کرش نمی‌کند**. دیپی کاملاً آفلاین کار می‌کند؛ بررسی نسخه فقط یک امکان اضافه است.
+- اتصال اینترنت را بررسی کن و **«تلاش دوباره»** را بزن.
+- اگر پنجره‌ی نصب باز نشد، در پنجره‌ی نسخه‌ی تازه گزینه‌ی **«باز کردن صفحه انتشار
+  در مرورگر»** هم هست؛ می‌توانی مثل قبل APK را دستی دانلود و نصب کنی
+  ([راهنمای نصب](INSTALL.fa.md)).
+- اگر برنامه در پس‌زمینه بود، ممکن است به‌جای پنجره‌ی نصب یک **اعلان** ببینی؛
+  روی همان بزن.
 
-### چرا اجازه و نصب خودکار نداریم؟
+### چرا نصب خودکار (بی‌صدا) نداریم؟
 
-چون برنامه خودش APK را نصب نمی‌کند:
+چون امنیت مهم‌تر است:
 
-- هیچ اجازه‌ی اضافه‌ای (مثل `REQUEST_INSTALL_PACKAGES`) لازم نیست،
-- هشدارهای امنیتی هنگام نصب کمتر می‌شود،
-- دانلود و نصب کاملاً در دست کاربر است.
+- هیچ فایلی بدون زدن دکمه توسط تو دانلود نمی‌شود.
+- فایل ناشناس یا با امضای دیگر هرگز به نصب‌کننده داده نمی‌شود.
+- تأیید نهایی همیشه با خود اندروید و خود توست.
 
 ### چطور نسخه‌ی جدید منتشر کنم؟
 
@@ -51,26 +68,34 @@ git tag v1.2.3
 git push origin v1.2.3
 ```
 
-(یا مثل قبل کارت‌های استاندارد روی `main` بفرست.) راهنمای کامل در
+(یا کارت‌های استاندارد روی `main` بفرست.) راهنمای کامل در
 [`RELEASE.md`](RELEASE.md) است.
 
 ---
 
 ## In English
 
-Dipi checks its **latest GitHub Release** on start, at most once every 24 hours,
-by calling `api.github.com/repos/mst-ghi/dipi/releases/latest`. It compares the
-tag with the installed version using a real numeric semver compare. If a newer
-version exists it shows a small Persian dialog with the version number, the
-release notes and a **"Download from GitHub"** button that opens the APK link in
-the system browser. Nothing is downloaded or installed by the app, so it needs no
-special permission and adds no install-time security warning. A small download
-icon appears in the header while an update is available.
+Dipi checks the **latest GitHub Release** on start, at most once every 24 hours,
+at `api.github.com/repos/Dipi-App/app/releases/latest`. It compares the tag with
+the installed version using a numeric semver compare and stays quiet when there
+is nothing new.
 
-Network and API errors are handled quietly (never a crash), and the app stays
-fully offline-capable. A manual check is available in
-**Settings → بررسی نسخه جدید** and ignores the 24-hour window.
+When a newer release exists, the dialog offers **Download and install**. The APK
+for the device ABI is downloaded only after that tap, with progress. Before
+Android's installer is opened, the app verifies that the file is the same
+package, has a higher `versionCode`, and is signed with the installed app's
+certificate; GitHub's SHA-256 digest is checked when present. Android then shows
+its own install confirmation, so nothing is installed silently.
 
-There is no ABI matching or checksum download any more: the browser performs the
-download and the user can verify the published `<file>.apk.sha256` by hand (see
-[`INSTALL.fa.md`](INSTALL.fa.md)).
+On first use Android requires "install unknown apps" permission for Dipi; the
+dialog explains it and opens the exact settings page. If the app is in the
+background when the file is ready, a notification opens the confirmation. The
+GitHub release page remains available as a browser fallback.
+
+Network and API errors never crash the app: automatic checks stay silent, and a
+manual check reports that it could not run. A missing repository (HTTP 404) is
+now an error rather than a false "up to date", which is what previously hid a
+stale owner/repo in the update feed.
+
+A manual check is available in **Settings → بررسی نسخه جدید** and ignores the
+24-hour window.

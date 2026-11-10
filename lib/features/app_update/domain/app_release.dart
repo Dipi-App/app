@@ -47,6 +47,18 @@ class AppRelease {
     return apks.isEmpty ? null : apks.first;
   }
 
+  /// The ABI-specific APK when the release has one, else the universal one.
+  /// A 64-bit phone downloads ~25 MB instead of the ~70 MB universal file.
+  ReleaseAsset? apkForAbi(String? abi) {
+    final wanted = abi?.trim().toLowerCase() ?? '';
+    if (wanted.isNotEmpty) {
+      for (final asset in apks) {
+        if (asset.name.toLowerCase().contains(wanted)) return asset;
+      }
+    }
+    return bestApk;
+  }
+
   /// Where the "download" button should send the browser.
   String get downloadUrl {
     final apk = bestApk;

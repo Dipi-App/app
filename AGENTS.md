@@ -88,9 +88,11 @@ never edit by hand. `flutter_launcher_icons` and `flutter_native_splash` output
   only in the UI.
 - Money is stored as **integer Rial** (canonical unit). Display/entry uses the
   selected unit: `toman` (= 10 rial) or `rial`. Never use `double` for money.
-- No network calls except the GitHub release check in `features/app_update`
-  (which only opens the download page in the browser — no auto-install, no
-  `REQUEST_INSTALL_PACKAGES`).
+- No network calls except the GitHub release check and the APK download in
+  `features/app_update`. Updates are never silent: the user taps install, the
+  native side verifies package name, a higher versionCode and an identical
+  signing certificate, then Android's installer asks for confirmation. The
+  browser link remains as a fallback.
 - Business logic (balance, stats) lives in pure Dart classes, not widgets.
 - Backup files are plain JSON; the automatic file shape is
   `{ schemaVersion, appVersion, createdAt, data }` (see `BackupDocument`).
@@ -122,8 +124,9 @@ namespace stays `com.yourname.dipi` so no source file has to move.
 4. Stats and charts — done.
 5. Local JSON backup/import, export txt/md/docx — done.
 6. Automatic local backup (12h, Documents/dipi) — done.
-7. In-app update check (GitHub releases) — opens the APK link in the browser; no
-   auto-install, no extra permissions. Releases are tag-triggered (`vX.Y.Z`).
+7. In-app update (GitHub releases) — checks the canonical `Dipi-App/app` feed,
+   downloads the APK for the device ABI on user request, verifies it and hands
+   it to Android's installer. Releases are tag-triggered (`vX.Y.Z`).
 8. Animation polish, app lock, tests — done.
 
 ## Backup
